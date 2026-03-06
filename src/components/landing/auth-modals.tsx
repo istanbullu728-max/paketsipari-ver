@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -15,7 +16,9 @@ import { Label } from "@/components/ui/label";
 import { LogIn, UserPlus, Building2, Mail, Lock, Phone, ArrowRight } from "lucide-react";
 
 export function AuthModals() {
+    const router = useRouter();
     const [mode, setMode] = useState<"login" | "register">("login");
+    const [isLoading, setIsLoading] = useState(false);
 
     const [formData, setFormData] = useState({
         businessName: "",
@@ -39,12 +42,17 @@ export function AuthModals() {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (validate()) {
-            console.log("Submit", mode, formData);
-            // In a real app, you would call your auth API here
-            alert(mode === "login" ? "Giriş yapılıyor..." : "Kayıt olunuyor...");
+            setIsLoading(true);
+
+            // Simulate API call for login/register
+            await new Promise((resolve) => setTimeout(resolve, 1500));
+
+            setIsLoading(false);
+            // On success, redirect to admin dashboard
+            router.push("/admin");
         }
     };
 
@@ -146,9 +154,22 @@ export function AuthModals() {
                             </div>
                         )}
 
-                        <Button type="submit" className="w-full h-11 text-base font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform active:scale-95">
-                            {mode === "login" ? "Giriş Yap" : "Ücretsiz Başla"}
-                            <ArrowRight className="ml-2 w-4 h-4" />
+                        <Button
+                            type="submit"
+                            disabled={isLoading}
+                            className="w-full h-11 text-base font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform active:scale-95 disabled:opacity-70 disabled:hover:scale-100"
+                        >
+                            {isLoading ? (
+                                <span className="flex items-center gap-2">
+                                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    {mode === "login" ? "Giriş Yapılıyor..." : "Kayıt Olunuyor..."}
+                                </span>
+                            ) : (
+                                <>
+                                    {mode === "login" ? "Giriş Yap" : "Ücretsiz Başla"}
+                                    <ArrowRight className="ml-2 w-4 h-4" />
+                                </>
+                            )}
                         </Button>
 
                         <div className="text-center pt-2">

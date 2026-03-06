@@ -8,13 +8,15 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Edit, Trash2, Image as ImageIcon, Upload, X, Link } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Plus, Edit, Trash2, Image as ImageIcon, Upload, X, Link, Rocket, CheckCircle2, ExternalLink, Copy } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 
 export default function AdminMenuPage() {
     const { restaurantData, updateRestaurantData } = useRestaurant();
     const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
     const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
+    const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false);
+    const [isPublishing, setIsPublishing] = useState(false);
 
     // Category State
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -160,6 +162,27 @@ export default function AdminMenuPage() {
         setIsProductDialogOpen(true);
     };
 
+    const handlePublish = async () => {
+        setIsPublishing(true);
+        // Simulate publishing process
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        setIsPublishing(false);
+        setIsPublishDialogOpen(true);
+    };
+
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        // Basic feedback (in a real app, use a toast notification)
+        const btn = document.getElementById('copy-btn');
+        if (btn) {
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Kopyalandı!';
+            setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+        }
+    };
+
+    const siteUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/${restaurantData.slug}`;
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -167,12 +190,29 @@ export default function AdminMenuPage() {
                     <h1 className="text-3xl font-bold tracking-tight">Menü Yönetimi</h1>
                     <p className="text-zinc-500 mt-2">Kategorileri, ürünleri ve fiyatları düzenleyin.</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                     <Button variant="outline" onClick={() => { setEditingCategory(null); setCategoryName(""); setIsCategoryDialogOpen(true); }}>
-                        <Plus className="w-4 h-4 mr-2" /> Kategori Ekle
+                        <Plus className="w-4 h-4 mr-2" /> Kategori
                     </Button>
-                    <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => { setEditingProduct(null); setProductForm({ name: "", description: "", price: "", imageUrl: "" }); setIsProductDialogOpen(true); }}>
-                        <Plus className="w-4 h-4 mr-2" /> Ürün Ekle
+                    <Button variant="outline" className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-900/30" onClick={() => { setEditingProduct(null); setProductForm({ name: "", description: "", price: "", imageUrl: "" }); setIsProductDialogOpen(true); }}>
+                        <Plus className="w-4 h-4 mr-2" /> Ürün
+                    </Button>
+                    <Button
+                        onClick={handlePublish}
+                        disabled={isPublishing}
+                        className="bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all font-bold group"
+                    >
+                        {isPublishing ? (
+                            <span className="flex items-center gap-2">
+                                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                Yayınlanıyor...
+                            </span>
+                        ) : (
+                            <>
+                                <Rocket className="w-4 h-4 mr-2 group-hover:-translate-y-1 transition-transform" />
+                                Siteyi Yayınla
+                            </>
+                        )}
                     </Button>
                 </div>
             </div>
@@ -373,8 +413,8 @@ export default function AdminMenuPage() {
                                     onDrop={handleDrop}
                                     onClick={() => fileInputRef.current?.click()}
                                     className={`relative flex flex-col items-center justify-center h-36 rounded-xl border-2 border-dashed cursor-pointer transition-all select-none ${isDragging
-                                            ? "border-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 scale-[1.01]"
-                                            : "border-zinc-200 dark:border-zinc-700 hover:border-emerald-300 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                                        ? "border-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 scale-[1.01]"
+                                        : "border-zinc-200 dark:border-zinc-700 hover:border-emerald-300 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
                                         }`}
                                 >
                                     {productForm.imageUrl ? (
@@ -416,6 +456,57 @@ export default function AdminMenuPage() {
                         <Button variant="outline" onClick={() => setIsProductDialogOpen(false)}>İptal</Button>
                         <Button onClick={handleSaveProduct} className="bg-emerald-600 hover:bg-emerald-700 text-white">Kaydet</Button>
                     </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Publish Success Dialog */}
+            <Dialog open={isPublishDialogOpen} onOpenChange={setIsPublishDialogOpen}>
+                <DialogContent className="sm:max-w-md text-center p-8">
+                    <div className="mx-auto w-16 h-16 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-500 rounded-full flex items-center justify-center mb-6 ring-8 ring-emerald-50 dark:ring-emerald-500/10">
+                        <CheckCircle2 className="w-8 h-8" />
+                    </div>
+
+                    <DialogTitle className="text-2xl font-bold mb-2">Tebrikler!</DialogTitle>
+                    <DialogDescription className="text-base text-zinc-600 dark:text-zinc-400 mb-8">
+                        Siteniz başarıyla yayınlandı ve sipariş almaya hazır. Harika görünüyorsunuz.
+                    </DialogDescription>
+
+                    <div className="space-y-4">
+                        <div className="bg-zinc-50 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 relative flex items-center justify-between group">
+                            <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate pr-4select-all">
+                                {siteUrl}
+                            </span>
+                            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity absolute right-4">
+                                <Button
+                                    id="copy-btn"
+                                    size="sm"
+                                    variant="secondary"
+                                    className="h-8 shadow-sm font-medium"
+                                    onClick={() => copyToClipboard(siteUrl)}
+                                >
+                                    <Copy className="w-3 h-3 mr-1.5" />
+                                    Kopyala
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                            <Button
+                                variant="outline"
+                                className="w-full h-11"
+                                onClick={() => setIsPublishDialogOpen(false)}
+                            >
+                                Kapat
+                            </Button>
+                            <Button
+                                className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-bold"
+                                onClick={() => window.open(siteUrl, '_blank')}
+                            >
+                                Siteyi Görüntüle
+                                <ExternalLink className="w-4 h-4 ml-2" />
+                            </Button>
+                        </div>
+                    </div>
                 </DialogContent>
             </Dialog>
 
