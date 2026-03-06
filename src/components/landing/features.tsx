@@ -4,40 +4,40 @@ import { Smartphone, MessageSquare, BarChart3, ScanQrCode, Zap, Clock } from "lu
 
 const features = [
     {
-        icon: <Smartphone className="w-6 h-6" />,
-        title: "Dijital Menü & QR",
-        desc: "Basılı menülerle uğraşmayın. Müşterileriniz QR kodunu okutsun, tüm menünüzü şık bir arayüzle görsün.",
-        color: "bg-blue-500"
-    },
-    {
-        icon: <MessageSquare className="w-6 h-6" />,
-        title: "WhatsApp Sipariş",
-        desc: "Siparişler doğrudan WhatsApp'ınıza düşer. Aracı olmadan, komisyonsuz ve hızlı iletişim sağlayın.",
+        icon: <Zap className="w-6 h-6" />,
+        title: "%0 Komisyon (Net Kazanç)",
+        desc: "Yemek platformlarına %30-40 komisyon vermeyin. Kazancınızın %100'ü doğrudan sizin cebinizde kalsın.",
         color: "bg-emerald-500"
     },
     {
-        icon: <BarChart3 className="w-6 h-6" />,
-        title: "Akıllı Analizler",
-        desc: "En çok satanları görün, müşteri alışkanlıklarını analiz edin ve kazancınızı verilerle artırın.",
+        icon: <Clock className="w-6 h-6" />,
+        title: "Akıllı Sipariş Takibi (Zil Sesi)",
+        desc: "Sipariş geldiğinde panelinizde yüksek sesli zil çalar. Yoğun mutfak ortamında bile hiçbir siparişi kaçırmazsınız.",
         color: "bg-primary"
     },
     {
-        icon: <ScanQrCode className="w-6 h-6" />,
-        title: "Hızlı Kurulum",
-        desc: "Karmaşık teknik süreçler yok. Restoran bilgilerinizi girin, ürünlerinizi yükleyin ve anında başlayın.",
-        color: "bg-amber-500"
+        icon: <MessageSquare className="w-6 h-6" />,
+        title: "Tek Tıkla WhatsApp Onay",
+        desc: "Siparişi onayladığınız an müşteriye otomatik olarak 'Hazırlanıyor' veya 'Yola Çıktı' şablon mesajı gönderilir.",
+        color: "bg-blue-500"
     },
     {
-        icon: <Zap className="w-6 h-6" />,
-        title: "Sıfır Komisyon",
-        desc: "Uygulama içi satışlardan komisyon almayız. Kazancınızın %100'ü sizin cebinizde kalsın.",
+        icon: <BarChart3 className="w-6 h-6" />,
+        title: "Müşteri Rehberi & Sadakat",
+        desc: "Sipariş veren her müşteri otomatik olarak listenize eklenir. Kendi müşteri datanızı oluşturun ve özel kampanyalar yapın.",
         color: "bg-purple-500"
     },
     {
-        icon: <Clock className="w-6 h-6" />,
-        title: "7/24 Erişim",
-        desc: "Sisteminiz her an aktif. Siz uyurken bile müşterileriniz menünüzü inceleyebilir.",
-        color: "bg-red-500"
+        icon: <ScanQrCode className="w-6 h-6" />,
+        title: "QR Menü & Dijital Şube",
+        desc: "Müşterileriniz QR kodu okutsun, tüm menünüzü şık bir arayüzle görsün ve anında sipariş versin.",
+        color: "bg-amber-500"
+    },
+    {
+        icon: <Smartphone className="w-6 h-6" />,
+        title: "Kusursuz Mobil Deneyim",
+        desc: "Uygulama indirmeden, tarayıcı üzerinden çalışan hızlı ve profesyonel sipariş sitesi.",
+        color: "bg-zinc-900"
     }
 ];
 

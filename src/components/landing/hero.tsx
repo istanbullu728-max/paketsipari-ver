@@ -25,21 +25,21 @@ export function Hero() {
                         </div>
 
                         <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100 leading-[1.1] mb-6">
-                            Kendi paket sipariş siteni <span className="text-primary italic">5dk da</span> kur
+                            Aracıya Komisyon Ödemeyi Bırakın, <span className="text-primary italic">5 Dakikada</span> Kendi Sisteminizi Kurun
                         </h1>
 
                         <p className="text-lg md:text-xl text-zinc-600 dark:text-zinc-400 mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                            Aracı komisyonlar olmadan, kontrolü eline al. Dijital menünü oluştur, WhatsApp siparişlerini anında yönet ve işletmeni büyüt.
+                            WhatsApp entegrasyonlu, akıllı zil bildirimli ve profesyonel yönetim panelli dijital şubeniz bugün hazır. Kurulum ücretsiz, kredi kartı gerekmez.
                         </p>
 
                         <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-10">
                             <Button size="lg" className="h-14 px-8 text-lg font-bold shadow-xl shadow-primary/20 hover:scale-105 transition-all w-full sm:w-auto">
-                                Hemen Ücretsiz Başla
+                                Ücretsiz Başla
                                 <ArrowRight className="ml-2 w-5 h-5" />
                             </Button>
                             <Button variant="outline" size="lg" className="h-14 px-8 text-lg font-bold border-2 w-full sm:w-auto hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-all">
                                 <PlayCircle className="mr-2 w-5 h-5" />
-                                Demoyu İzle
+                                Yönetim Panelini Gör
                             </Button>
                         </div>
 
@@ -175,6 +175,17 @@ export function Hero() {
                                     <p className="text-sm font-black text-zinc-900 dark:text-zinc-100">Et Döner Dürüm #42</p>
                                 </div>
                             </div>
+                        </div>
+
+                        {/* Dashboard Intro Text */}
+                        <div className="absolute -bottom-10 -left-6 md:-bottom-20 md:-left-12 max-w-[200px] bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md p-4 rounded-2xl shadow-xl border border-white/20 dark:border-zinc-800 animate-fade-in hidden lg:block">
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                                <span className="text-[10px] font-black text-primary uppercase tracking-wider">İşletmeniz Cebinizde</span>
+                            </div>
+                            <p className="text-xs font-bold text-zinc-600 dark:text-zinc-400 leading-tight">
+                                Günlük ciro, paket sayısı ve mağaza trafiğini anlık grafiklerle takip edin.
+                            </p>
                         </div>
                     </div>
                 </div>

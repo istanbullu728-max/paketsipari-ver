@@ -77,7 +77,7 @@ export function Pricing() {
                         >
                             {plan.popular && (
                                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-white text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg">
-                                    EN POPÜLER
+                                    EN ÇOK TERCİH EDİLEN
                                 </div>
                             )}
 
@@ -110,9 +110,14 @@ export function Pricing() {
                     ))}
                 </div>
 
-                <div className="mt-16 text-center text-zinc-500 text-sm flex items-center justify-center gap-2">
-                    <Info className="w-4 h-4" />
-                    <span>Tüm planlarda ilk 14 gün ücretsiz deneme mevcuttur. Taahhüt yok.</span>
+                <div className="mt-16 text-center text-zinc-500 text-sm space-y-2">
+                    <div className="flex items-center justify-center gap-2">
+                        <Info className="w-4 h-4" />
+                        <span>Gizli ücret yok, sipariş başına ücret yok. Sadece aylık sabit abonelik.</span>
+                    </div>
+                    <div className="flex items-center justify-center gap-2 opacity-60">
+                        <span>Tüm planlarda ilk 14 gün ücretsiz deneme mevcuttur. Taahhüt yok.</span>
+                    </div>
                 </div>
             </div>
         </section>

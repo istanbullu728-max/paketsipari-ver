@@ -5,18 +5,18 @@ import { UserCircle, ListPlus, Send } from "lucide-react";
 const steps = [
     {
         icon: <UserCircle className="w-10 h-10" />,
-        title: "1. Kayıt Ol",
-        desc: "Adınızı ve e-postanızı girerek 30 saniye içinde ücretsiz hesabınızı oluşturun."
+        title: "1. 30 Saniyede Kaydol",
+        desc: "Hızlıca hesabınızı oluşturun, kredi kartı bilgisi gerekmeden test etmeye başlayın."
     },
     {
         icon: <ListPlus className="w-10 h-10" />,
-        title: "2. Menünü Ekle",
-        desc: "Ürünlerinizi, fotoğraflarınızı ve fiyatlarınızı kolayca yönetim panelinden yükleyin."
+        title: "2. Menünü ve Numaranı Gir",
+        desc: "Ürünlerinizi yükleyin ve siparişlerin geleceği WhatsApp numaranızı sisteme tanımlayın."
     },
     {
         icon: <Send className="w-10 h-10" />,
-        title: "3. Sipariş Al",
-        desc: "QR kodunuzu masalara veya broşürlere ekleyin, siparişleri almaya başlayın."
+        title: "3. Paylaş ve Sipariş Al",
+        desc: "QR kodunuzu veya linkinizi paylaşın, aracı komisyonu olmadan sipariş almaya başlayın."
     }
 ];
 
