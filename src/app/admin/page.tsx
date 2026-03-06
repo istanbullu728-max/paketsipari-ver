@@ -6,7 +6,7 @@ import { DollarSign, ShoppingBag, CheckCircle, Users } from "lucide-react";
 import dynamic from "next/dynamic";
 import TopSellersCard from "@/components/admin/top-sellers-card";
 import LoyalCustomersCard from "@/components/admin/loyal-customers-card";
-import QuickActionsBand from "@/components/admin/quick-actions-band";
+
 
 // Recharts must be client-only; dynamic import avoids SSR issues
 const WeeklySalesChart = dynamic(() => import("@/components/admin/weekly-sales-chart"), { ssr: false });
@@ -101,11 +101,7 @@ export default function AdminDashboardPage() {
                 </div>
             </div>
 
-            {/* ── Quick Actions Band ────────────────── */}
-            <div>
-                <h2 className="text-lg font-bold dark:text-zinc-100 mb-4">Hızlı İşlemler</h2>
-                <QuickActionsBand />
-            </div>
+
         </div>
     );
 }
