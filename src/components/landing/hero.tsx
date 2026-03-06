@@ -25,7 +25,7 @@ export function Hero() {
                         </div>
 
                         <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100 leading-[1.1] mb-6">
-                            Aracıya Komisyon Ödemeyi Bırakın, <span className="text-primary italic">5 Dakikada</span> Kendi Sisteminizi Kurun
+                            Aracıya Komisyon Ödemeyi Bırakın, <span className="text-primary italic">5 dakikada</span> paket sipariş sitenizi kurun
                         </h1>
 
                         <p className="text-lg md:text-xl text-zinc-600 dark:text-zinc-400 mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed">
