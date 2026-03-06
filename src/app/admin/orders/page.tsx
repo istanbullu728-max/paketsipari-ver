@@ -18,6 +18,7 @@ import {
     Star,
     PartyPopper,
     Trash2,
+    BellRing,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -80,12 +81,11 @@ function buildWaLink(phone: string, message: string) {
 
 function openWa(order: Order, type: "confirm" | "onway" | "generic" | "review") {
     const first = order.customerName.split(" ")[0];
-    const itemList = order.items.map(i => `- ${i.quantity}x ${i.productName}`).join("\n");
     const messages: Record<typeof type, string> = {
         confirm:
-            `Merhaba ${first} 👋\n\nSiparişiniz onaylandı ve mutfağımızda hazırlanmaya başlandı! 🍽️\n\n📦 Siparişiniz:\n${itemList}\n\n💰 Toplam: ${order.totalAmount} TL\n\nTahminen 30-45 dakika içinde adresinizde olacak. Afiyet olsun! 😊`,
+            `Merhaba ${first}, siparişiniz alındı ve hazırlanmaya başlandı! Afiyet olsun.`,
         onway:
-            `Merhaba ${first} 🛵\n\nHarika haberler! Siparişiniz yola çıktı, kuryemiz az sonra kapınızda!\n\n📍 Teslimat Adresi: ${order.customerAddress}\n\nBekleyin, geliyoruz! 🎉`,
+            `Müjde! Siparişiniz yola çıktı, kuryemiz kapınıza gelmek üzere.`,
         review:
             `Merhaba ${first} 👋\n\nUmarız siparişinizi beğenmişsinizdir! Sizi mutlu etmek bizim için çok önemli.\n\n⭐ Deneyiminizi paylaşır mısınız? Değerli görüşleriniz bizi daha iyi yapıyor.\n\nTeşekkürler! 🙏`,
         generic:
@@ -100,6 +100,7 @@ export default function AdminOrdersPage() {
     const { orders, updateOrderStatus, deleteOrder } = useOrders();
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [filter, setFilter] = useState<OrderStatus | "all">("all");
+    const [showNewOrderAlert, setShowNewOrderAlert] = useState(false);
 
     // ── Bell notification on new pending order ─────────────────────────
     const prevCountRef = useRef(orders.length);
@@ -134,7 +135,11 @@ export default function AdminOrdersPage() {
         if (curr > prev) {
             // Only ring if the newest order is pending
             const newest = orders[0];
-            if (newest?.status === "pending") playBell();
+            if (newest?.status === "pending") {
+                playBell();
+                setShowNewOrderAlert(true);
+                setTimeout(() => setShowNewOrderAlert(false), 5000);
+            }
         }
         prevCountRef.current = curr;
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -173,7 +178,29 @@ export default function AdminOrdersPage() {
     ];
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 relative">
+            {/* Visual New Order Notification Area */}
+            <AnimatePresence>
+                {showNewOrderAlert && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -50, scale: 0.9 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                        className="fixed top-24 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
+                    >
+                        <div className="bg-emerald-600 text-white px-6 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 border-2 border-emerald-400/30">
+                            <div className="bg-white/20 p-2 rounded-full animate-bounce">
+                                <BellRing className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-lg leading-none m-0">YENİ SİPARİŞ GELDİ!</h3>
+                                <p className="text-emerald-100 text-sm mt-1 mb-0 leading-none">Listeyi kontrol edin.</p>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
@@ -265,8 +292,8 @@ export default function AdminOrdersPage() {
                                                 className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5"
                                                 onClick={() => handleAction(order, "approve")}
                                             >
-                                                <CheckCircle2 className="w-3.5 h-3.5" />
-                                                Onayla
+                                                <span className="text-base leading-none">✅</span>
+                                                Siparişi Onayla
                                             </Button>
                                         )}
 
@@ -277,7 +304,7 @@ export default function AdminOrdersPage() {
                                                 className="bg-blue-600 hover:bg-blue-700 text-white gap-1.5"
                                                 onClick={() => handleAction(order, "onway")}
                                             >
-                                                <Truck className="w-3.5 h-3.5" />
+                                                <span className="text-base leading-none">🛵</span>
                                                 Yola Çıkar
                                             </Button>
                                         )}

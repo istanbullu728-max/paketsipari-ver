@@ -23,6 +23,7 @@ export interface Order {
     totalAmount: number;
     status: OrderStatus;
     createdAt: Date;
+    updatedAt?: Date;
 }
 
 interface OrderContextType {
@@ -54,7 +55,8 @@ export function OrderProvider({ children }: { children: ReactNode }) {
             ],
             totalAmount: 270,
             status: "pending",
-            createdAt: new Date(Date.now() - 1000 * 60 * 5) // 5 mins ago
+            createdAt: new Date(Date.now() - 1000 * 60 * 5), // 5 mins ago
+            updatedAt: new Date(Date.now() - 1000 * 60 * 5)
         },
         {
             id: "ORD-1235",
@@ -66,7 +68,8 @@ export function OrderProvider({ children }: { children: ReactNode }) {
             ],
             totalAmount: 180,
             status: "preparing",
-            createdAt: new Date(Date.now() - 1000 * 60 * 20) // 20 mins ago
+            createdAt: new Date(Date.now() - 1000 * 60 * 20), // 20 mins ago
+            updatedAt: new Date(Date.now() - 1000 * 60 * 15)
         },
         {
             id: "ORD-1236",
@@ -79,7 +82,8 @@ export function OrderProvider({ children }: { children: ReactNode }) {
             ],
             totalAmount: 230,
             status: "delivering",
-            createdAt: new Date(Date.now() - 1000 * 60 * 45) // 45 mins ago
+            createdAt: new Date(Date.now() - 1000 * 60 * 45), // 45 mins ago
+            updatedAt: new Date(Date.now() - 1000 * 60 * 10)
         }
     ]);
 
@@ -89,12 +93,13 @@ export function OrderProvider({ children }: { children: ReactNode }) {
             id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
             status: "pending",
             createdAt: new Date(),
+            updatedAt: new Date(),
         };
         setOrders(prev => [newOrder, ...prev]);
     };
 
     const updateOrderStatus = (orderId: string, newStatus: OrderStatus) => {
-        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus, updatedAt: new Date() } : o));
     };
 
     const deleteOrder = (orderId: string) => {
