@@ -8,21 +8,21 @@ import { cn } from "@/lib/utils";
 const plans = [
     {
         name: "Başlangıç",
-        price: { monthly: "249", yearly: "199" },
+        price: { monthly: "800", yearly: "560" },
         desc: "Küçük ölçekli işletmeler için ideal.",
         features: ["50 Ürün Sınırı", "QR Menü", "WhatsApp Sipariş", "Temel Analitik"],
         popular: false
     },
     {
         name: "Profesyonel",
-        price: { monthly: "499", yearly: "349" },
+        price: { monthly: "900", yearly: "630" },
         desc: "Büyüyen restoranlar için en iyi seçenek.",
         features: ["Sınırsız Ürün", "Gelişmiş Analitik", "Müşteri Yönetimi", "Öncelikli Destek", "Özel QR Tasarımı"],
         popular: true
     },
     {
         name: "Enterprise",
-        price: { monthly: "999", yearly: "799" },
+        price: { monthly: "1200", yearly: "840" },
         desc: "Büyük zincir restoranlar için tam kontrol.",
         features: ["Çoklu Şube Yönetimi", "API Erişimi", "7/24 Özel Danışman", "White-label Kullanım", "Özel Entegrasyonlar"],
         popular: false
