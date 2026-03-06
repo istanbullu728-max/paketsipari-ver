@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Save, Upload, X, Image as ImageIcon } from "lucide-react";
+import { Save, Upload, X, Image as ImageIcon, MessageCircle } from "lucide-react";
 
 export default function AdminSettingsPage() {
     const { restaurantData, updateRestaurantData } = useRestaurant();
@@ -181,15 +181,76 @@ export default function AdminSettingsPage() {
                         <Label htmlFor="name">Restoran Adı</Label>
                         <Input id="name" name="name" value={formData.name} onChange={handleChange} />
                     </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="slug">Mağaza Linki (Slug)</Label>
-                        <div className="flex">
-                            <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 text-zinc-500 sm:text-sm">
-                                seninsiten.com/
-                            </span>
-                            <Input id="slug" name="slug" value={formData.slug} className="rounded-l-none pl-2" onChange={handleChange} />
+                </CardContent>
+            </Card>
+
+            {/* ── Yayınlama ve Domain Yönetimi ───────────────────────────────── */}
+            <Card className="dark:border-zinc-800 dark:bg-zinc-950">
+                <CardHeader>
+                    <CardTitle>Yayınlama ve Domain Yönetimi</CardTitle>
+                    <CardDescription>Müşterilerinizin sitenize ulaşacağı adresi belirleyin.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Option A: Free Subdomain */}
+                        <div className="flex flex-col space-y-4 p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
+                            <div className="space-y-1">
+                                <h3 className="font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-black">A</span>
+                                    Ücretsiz Alt Alan Adı
+                                </h3>
+                                <p className="text-sm text-zinc-500">paketsipari-ver.app Uzantısını Kullan</p>
+                            </div>
+
+                            <div className="space-y-3 flex-1">
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="slug" className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Dükkan Adı (Slug)</Label>
+                                    <Input
+                                        id="slug"
+                                        name="slug"
+                                        value={formData.slug}
+                                        onChange={handleChange}
+                                        placeholder="Örn: hasankofte"
+                                        className="h-11 font-medium bg-white dark:bg-zinc-950"
+                                    />
+                                </div>
+
+                                {formData.slug ? (
+                                    <div className="mt-2 text-sm text-emerald-700 dark:text-emerald-300 font-medium bg-emerald-100/50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 px-3 py-2.5 rounded-lg break-all flex items-center gap-2">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                                        {formData.slug}.paketsipari-ver.app
+                                    </div>
+                                ) : (
+                                    <div className="mt-2 text-sm text-zinc-500 italic px-1">
+                                        Lütfen bir dükkan adı girin.
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                        <p className="text-xs text-zinc-400">Müşterilerinizin sitenize ulaşacağı adres.</p>
+
+                        {/* Option B: Custom Domain */}
+                        <div className="flex flex-col justify-between space-y-4 p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-sm">
+                            <div className="space-y-3">
+                                <h3 className="font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-xs font-black">B</span>
+                                    Kendi Domainini Kullan
+                                </h3>
+                                <p className="text-sm text-zinc-500 leading-relaxed">
+                                    Mevcut veya yeni alacağınız web adresinizi (örn: <strong>www.restoranadi.com</strong>) özel olarak sisteminize bağlamak ister misiniz? Müşterilerinize daha kurumsal bir görüntü sunun.
+                                </p>
+                            </div>
+
+                            <div className="pt-2 mt-auto">
+                                <Button
+                                    className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-bold transition-all shadow-lg shadow-[#25D366]/20 h-auto py-3 whitespace-normal text-center leading-tight hover:scale-[1.02] active:scale-[0.98]"
+                                    onClick={() => window.open('https://wa.me/905330310245?text=Merhaba,%20alan%20ad%C4%B1m%C4%B1%20sisteme%20ba%C4%9Flamak%20istiyorum.', '_blank')}
+                                    type="button"
+                                >
+                                    <MessageCircle className="w-5 h-5 mr-2 shrink-0 fill-current" />
+                                    <span>Alan Adını Bağlamak İçin<br /><span className="text-xs font-medium opacity-90">Bizimle İletişime Geçin</span></span>
+                                </Button>
+                            </div>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
