@@ -30,7 +30,7 @@ const navItems = [
     { name: "Menü Yönetimi", href: "/admin/menu", icon: UtensilsCrossed },
     { name: "Pazarlama", href: "/admin/marketing", icon: Megaphone },
     { name: "Abonelik", href: "/admin/subscription", icon: CreditCard },
-    { name: "Ayarlar", href: "/admin/settings", icon: Settings },
+    { name: "Restoran Ayarları", href: "/admin/settings", icon: Settings },
 ];
 
 export default function AdminSidebar() {

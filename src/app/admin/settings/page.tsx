@@ -184,8 +184,37 @@ export default function AdminSettingsPage() {
                 </CardContent>
             </Card>
 
-            {/* ── Yayınlama ve Domain Yönetimi ───────────────────────────────── */}
+            {/* ── Sipariş & İletişim ─────────────────────────────────────────── */}
             <Card className="dark:border-zinc-800 dark:bg-zinc-950">
+                <CardHeader>
+                    <CardTitle>Sipariş & İletişim</CardTitle>
+                    <CardDescription>Siparişlerinizin yönlendirileceği WhatsApp numarasını belirleyin.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="whatsappNumber">WhatsApp Numarası</Label>
+                        <Input id="whatsappNumber" name="whatsappNumber" type="tel" value={formData.whatsappNumber} onChange={handleChange} placeholder="Örn: 905551234567" />
+                        <p className="text-xs text-zinc-400">Uluslararası kod ile birlikte (örn: 90) giriniz.</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="openTime">Açılış Saati</Label>
+                            <Input id="openTime" name="openTime" type="time" value={formData.openTime} onChange={handleChange} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="closeTime">Kapanış Saati</Label>
+                            <Input id="closeTime" name="closeTime" type="time" value={formData.closeTime} onChange={handleChange} />
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="minOrderAmount">Minimum Paket Tutarı (TL)</Label>
+                        <Input id="minOrderAmount" name="minOrderAmount" type="number" value={formData.minOrderAmount} onChange={handleChange} />
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* ── Yayınlama ve Domain Yönetimi ───────────────────────────────── */}
+            <Card className="dark:border-zinc-800 dark:bg-zinc-950 border-emerald-500/30">
                 <CardHeader>
                     <CardTitle>Yayınlama ve Domain Yönetimi</CardTitle>
                     <CardDescription>Müşterilerinizin sitenize ulaşacağı adresi belirleyin.</CardDescription>
@@ -251,35 +280,6 @@ export default function AdminSettingsPage() {
                                 </Button>
                             </div>
                         </div>
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* ── Sipariş & İletişim ─────────────────────────────────────────── */}
-            <Card className="dark:border-zinc-800 dark:bg-zinc-950">
-                <CardHeader>
-                    <CardTitle>Sipariş & İletişim</CardTitle>
-                    <CardDescription>Siparişlerinizin yönlendirileceği WhatsApp numarasını belirleyin.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="whatsappNumber">WhatsApp Numarası</Label>
-                        <Input id="whatsappNumber" name="whatsappNumber" type="tel" value={formData.whatsappNumber} onChange={handleChange} placeholder="Örn: 905551234567" />
-                        <p className="text-xs text-zinc-400">Uluslararası kod ile birlikte (örn: 90) giriniz.</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="openTime">Açılış Saati</Label>
-                            <Input id="openTime" name="openTime" type="time" value={formData.openTime} onChange={handleChange} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="closeTime">Kapanış Saati</Label>
-                            <Input id="closeTime" name="closeTime" type="time" value={formData.closeTime} onChange={handleChange} />
-                        </div>
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="minOrderAmount">Minimum Paket Tutarı (TL)</Label>
-                        <Input id="minOrderAmount" name="minOrderAmount" type="number" value={formData.minOrderAmount} onChange={handleChange} />
                     </div>
                 </CardContent>
             </Card>
