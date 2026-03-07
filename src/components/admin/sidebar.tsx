@@ -17,6 +17,7 @@ import {
     ChevronLeft,
     ExternalLink,
     Megaphone,
+    CreditCard,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ const navItems = [
     { name: "Müşterilerim", href: "/admin/customers", icon: Users },
     { name: "Menü Yönetimi", href: "/admin/menu", icon: UtensilsCrossed },
     { name: "Pazarlama", href: "/admin/marketing", icon: Megaphone },
+    { name: "Abonelik", href: "/admin/subscription", icon: CreditCard },
     { name: "Ayarlar", href: "/admin/settings", icon: Settings },
 ];
 
