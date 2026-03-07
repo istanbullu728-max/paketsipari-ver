@@ -237,29 +237,36 @@ export default function AdminMenuPage() {
                 }
             }
 
-            // Let's use Source Unsplash with specific keywords for a highly realistic look.
-            // We append different keywords to the same base term to force Unsplash to return different images
-            const encodedTerm = encodeURIComponent(searchTerm);
+            // source.unsplash.com is deprecated and returning 404s/broken images.
+            // We'll use a reliable fallback service or direct query approach using Pixabay API again since we have a key.
+            const apiKey = "48154694-358043b2f211516f4c4a4f895";
+            const res = await fetch(`https://pixabay.com/api/?key=${apiKey}&q=${encodeURIComponent(searchTerm)}&image_type=photo&per_page=12&orientation=horizontal&safesearch=true`);
 
-            // To ensure we don't get cached identical images, we append varied contextual tags
-            const results = [
-                `https://source.unsplash.com/800x600/?${encodedTerm},food`,
-                `https://source.unsplash.com/800x600/?${encodedTerm},plate`,
-                `https://source.unsplash.com/800x600/?${encodedTerm},restaurant`,
-                `https://source.unsplash.com/800x600/?${encodedTerm},gourmet`,
-                `https://source.unsplash.com/800x600/?${encodedTerm},meal`,
-                `https://source.unsplash.com/800x600/?${encodedTerm},delicious`
-            ];
-
-            // Wait a tiny bit to simulate loading
-            await new Promise(resolve => setTimeout(resolve, 800));
-
-            setSearchResults(results);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.hits && data.hits.length > 0) {
+                    setSearchResults(data.hits.map((hit: any) => hit.webformatURL));
+                } else {
+                    // Fallback to static direct Unsplash images if no results
+                    setSearchResults([
+                        "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80",
+                        "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&q=80",
+                        "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80",
+                        "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80",
+                        "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=800&q=80",
+                        "https://images.unsplash.com/photo-1554502078-ef0df4ae3562?w=800&q=80"
+                    ]);
+                }
+            } else {
+                throw new Error("API failed");
+            }
         } catch (error) {
             console.error("Image search error:", error);
             // Fallback
             setSearchResults([
-                "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800&auto=format&fit=crop"
+                "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80",
+                "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&q=80",
+                "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80"
             ]);
         } finally {
             setIsSearching(false);
