@@ -566,7 +566,7 @@ export default function AdminMenuPage() {
 
                     <div className="space-y-4">
                         <div className="bg-zinc-50 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 relative flex items-center justify-between group">
-                            <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate pr-4select-all">
+                            <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate pr-4 select-all">
                                 {siteUrl}
                             </span>
                             <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity absolute right-4">
@@ -586,13 +586,13 @@ export default function AdminMenuPage() {
                         <div className="flex flex-col sm:flex-row gap-3 pt-4">
                             <Button
                                 variant="outline"
-                                className="w-full h-11"
+                                className="w-full sm:flex-1 h-11"
                                 onClick={() => setIsPublishDialogOpen(false)}
                             >
                                 Kapat
                             </Button>
                             <Button
-                                className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-bold"
+                                className="w-full sm:flex-1 h-11 bg-primary hover:bg-primary/90 text-white font-bold"
                                 onClick={() => window.open(siteUrl, '_blank')}
                             >
                                 Siteyi Görüntüle
