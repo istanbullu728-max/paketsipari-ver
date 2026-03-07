@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useRestaurant } from "@/components/restaurant-provider";
 import { Category, Product } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
@@ -39,6 +39,22 @@ export default function AdminMenuPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState<string[]>([]);
     const [isSearching, setIsSearching] = useState(false);
+
+    // Auto-search effect when product name changes and we are in search mode
+    useEffect(() => {
+        if (!isProductDialogOpen || !productForm.name || productForm.name.length < 3) return;
+
+        const delayDebounceFn = setTimeout(() => {
+            if (searchQuery !== productForm.name) {
+                setSearchQuery(productForm.name);
+                if (imageMode === "search") {
+                    performImageSearch(productForm.name);
+                }
+            }
+        }, 800);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [productForm.name, isProductDialogOpen, imageMode]);
 
     const readFileAsDataUrl = (file: File): Promise<string> =>
         new Promise((resolve, reject) => {
@@ -164,6 +180,7 @@ export default function AdminMenuPage() {
             price: product.price.toString(),
             imageUrl: product.imageUrl || ""
         });
+        setSearchQuery(product.name);
         setIsProductDialogOpen(true);
     };
 
@@ -179,34 +196,45 @@ export default function AdminMenuPage() {
         setIsPublishDialogOpen(true);
     };
 
-    const simulateGoogleSearch = async () => {
-        if (!searchQuery.trim()) return;
+    const performImageSearch = async (query: string) => {
+        if (!query.trim()) return;
         setIsSearching(true);
-        // Simulate network search
-        await new Promise(resolve => setTimeout(resolve, 800));
+        try {
+            // Using Pixabay public API with standard parameters for food
+            const apiKey = "48154694-358043b2f211516f4c4a4f895"; // Demo key, ok to hardcode for this prototype
+            const encodedQuery = encodeURIComponent(`${query} food meal`);
+            const res = await fetch(`https://pixabay.com/api/?key=${apiKey}&q=${encodedQuery}&image_type=photo&per_page=12&orientation=horizontal&safesearch=true`);
 
-        // Provide mock high-quality food images based loosely on the query for demo purposes
-        const mockResults = [
-            `https://source.unsplash.com/800x600/?${encodeURIComponent(searchQuery)},food`,
-            `https://source.unsplash.com/800x600/?${encodeURIComponent(searchQuery)},plate`,
-            `https://source.unsplash.com/800x600/?${encodeURIComponent(searchQuery)},meal`,
-            `https://source.unsplash.com/800x600/?${encodeURIComponent(searchQuery)},delicious,food`,
-            `https://source.unsplash.com/800x600/?${encodeURIComponent(searchQuery)},restaurant`,
-            `https://source.unsplash.com/800x600/?${encodeURIComponent(searchQuery)},tasty`,
-        ];
+            if (res.ok) {
+                const data = await res.json();
+                if (data.hits && data.hits.length > 0) {
+                    setSearchResults(data.hits.map((hit: any) => hit.webformatURL));
+                } else {
+                    // Fallback to Unsplash source if no specific results
+                    setSearchResults([
+                        `https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800&auto=format&fit=crop`,
+                        `https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=800&auto=format&fit=crop`,
+                        `https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?q=80&w=800&auto=format&fit=crop`
+                    ]);
+                }
+            } else {
+                throw new Error("Failed to fetch");
+            }
+        } catch (error) {
+            console.error("Image search error:", error);
+            // Fallbacks in case of API failure
+            setSearchResults([
+                "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800&auto=format&fit=crop",
+                "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=800&auto=format&fit=crop",
+                "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?q=80&w=800&auto=format&fit=crop"
+            ]);
+        } finally {
+            setIsSearching(false);
+        }
+    };
 
-        // Since unsplash source is getting deprecated/unreliable, let's use some reliable fallbacks if search is generic
-        const reliableFoodImages = [
-            "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800&auto=format&fit=crop", // Healthy bowl
-            "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=800&auto=format&fit=crop", // Burger
-            "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?q=80&w=800&auto=format&fit=crop", // Pizza
-            "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=800&auto=format&fit=crop", // Kebab/Meat
-            "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?q=80&w=800&auto=format&fit=crop", // Pasta
-            "https://images.unsplash.com/photo-1554502078-ef0df4ae3562?q=80&w=800&auto=format&fit=crop", // Sushi
-        ];
-
-        setSearchResults(reliableFoodImages); // We'll just use the reliable ones for a great visual demo
-        setIsSearching(false);
+    const handleSearchClick = () => {
+        performImageSearch(searchQuery);
     };
 
     const copyToClipboard = (text: string) => {
@@ -497,13 +525,13 @@ export default function AdminMenuPage() {
                                                 placeholder={productForm.name ? `${productForm.name} görseli ara...` : "Ürün adı ile arayın..."}
                                                 value={searchQuery}
                                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                                onKeyDown={(e) => e.key === "Enter" && simulateGoogleSearch()}
+                                                onKeyDown={(e) => e.key === "Enter" && handleSearchClick()}
                                                 className="pl-9 bg-white dark:bg-black"
                                                 autoFocus
                                             />
                                         </div>
                                         <Button
-                                            onClick={simulateGoogleSearch}
+                                            onClick={handleSearchClick}
                                             disabled={isSearching || !searchQuery.trim()}
                                             className="bg-zinc-800 hover:bg-zinc-700 text-white"
                                         >
