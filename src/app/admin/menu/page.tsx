@@ -39,22 +39,25 @@ export default function AdminMenuPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState<string[]>([]);
     const [isSearching, setIsSearching] = useState(false);
-
     // Auto-search effect when product name changes and we are in search mode
     useEffect(() => {
-        if (!isProductDialogOpen || !productForm.name || productForm.name.length < 3) return;
+        // Only trigger if we have a name, dialog is open, and it's long enough
+        if (!isProductDialogOpen || !productForm.name || productForm.name.trim().length <= 2) return;
 
         const delayDebounceFn = setTimeout(() => {
             if (searchQuery !== productForm.name) {
                 setSearchQuery(productForm.name);
-                if (imageMode === "search") {
-                    performImageSearch(productForm.name);
+                // Trigger auto search directly
+                performImageSearch(productForm.name);
+                // Also switch mode to search if it wasn't already to show results instantly
+                if (imageMode !== "search") {
+                    setImageMode("search");
                 }
             }
-        }, 800);
+        }, 600); // 600ms debounce
 
         return () => clearTimeout(delayDebounceFn);
-    }, [productForm.name, isProductDialogOpen, imageMode]);
+    }, [productForm.name, isProductDialogOpen]);
 
     const readFileAsDataUrl = (file: File): Promise<string> =>
         new Promise((resolve, reject) => {
@@ -197,36 +200,66 @@ export default function AdminMenuPage() {
     };
 
     const performImageSearch = async (query: string) => {
-        if (!query.trim()) return;
-        setIsSearching(true);
-        try {
-            // Using Pixabay public API with standard parameters for food
-            const apiKey = "48154694-358043b2f211516f4c4a4f895"; // Demo key, ok to hardcode for this prototype
-            const encodedQuery = encodeURIComponent(`${query} food meal`);
-            const res = await fetch(`https://pixabay.com/api/?key=${apiKey}&q=${encodedQuery}&image_type=photo&per_page=12&orientation=horizontal&safesearch=true`);
+        const cleanQuery = query.trim();
+        if (!cleanQuery) return;
 
-            if (res.ok) {
-                const data = await res.json();
-                if (data.hits && data.hits.length > 0) {
-                    setSearchResults(data.hits.map((hit: any) => hit.webformatURL));
-                } else {
-                    // Fallback to Unsplash source if no specific results
-                    setSearchResults([
-                        `https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800&auto=format&fit=crop`,
-                        `https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=800&auto=format&fit=crop`,
-                        `https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?q=80&w=800&auto=format&fit=crop`
-                    ]);
+        setIsSearching(true);
+        setSearchResults([]); // clear while searching
+
+        try {
+            // Unsplash Source provides better direct matching for food items than raw Pixabay without translation
+            // Since it's a mock, we can generate multiple unqiue predictable unsplash source URLs so it looks like a gallery
+            // Note: Unsplash Source is technically deprecated but still works for many basic keywords. 
+            // We use a combination of query and random seeds to get different pictures of the same dish.
+
+            const engQueryMap: Record<string, string> = {
+                "sufle": "souffle dessert",
+                "adana": "kebab",
+                "kebap": "kebab meat",
+                "döner": "doner kebab meat",
+                "dürüm": "wrap sandwich",
+                "ayran": "yogurt drink",
+                "kola": "cola drink",
+                "lahmacun": "lahmacun pizza",
+                "pide": "pita bread food",
+                "tatlı": "dessert",
+                "künefe": "kunefe dessert",
+                "çorba": "soup bowl",
+                "pilav": "rice bowl",
+            };
+
+            // Try to map common turkish terms to english for better results, else use base query
+            let searchTerm = cleanQuery.toLowerCase();
+            for (const [tr, en] of Object.entries(engQueryMap)) {
+                if (searchTerm.includes(tr)) {
+                    searchTerm = en;
+                    break;
                 }
-            } else {
-                throw new Error("Failed to fetch");
             }
+
+            // Let's use Source Unsplash with specific keywords for a highly realistic look.
+            // We append different keywords to the same base term to force Unsplash to return different images
+            const encodedTerm = encodeURIComponent(searchTerm);
+
+            // To ensure we don't get cached identical images, we append varied contextual tags
+            const results = [
+                `https://source.unsplash.com/800x600/?${encodedTerm},food`,
+                `https://source.unsplash.com/800x600/?${encodedTerm},plate`,
+                `https://source.unsplash.com/800x600/?${encodedTerm},restaurant`,
+                `https://source.unsplash.com/800x600/?${encodedTerm},gourmet`,
+                `https://source.unsplash.com/800x600/?${encodedTerm},meal`,
+                `https://source.unsplash.com/800x600/?${encodedTerm},delicious`
+            ];
+
+            // Wait a tiny bit to simulate loading
+            await new Promise(resolve => setTimeout(resolve, 800));
+
+            setSearchResults(results);
         } catch (error) {
             console.error("Image search error:", error);
-            // Fallbacks in case of API failure
+            // Fallback
             setSearchResults([
-                "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800&auto=format&fit=crop",
-                "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=800&auto=format&fit=crop",
-                "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?q=80&w=800&auto=format&fit=crop"
+                "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800&auto=format&fit=crop"
             ]);
         } finally {
             setIsSearching(false);
