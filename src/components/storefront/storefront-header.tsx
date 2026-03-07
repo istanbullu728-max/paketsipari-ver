@@ -1,6 +1,8 @@
 import { Restaurant } from "@/types";
 import { Clock, Phone, MapPin, Star, ChevronRight, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { RestaurantLogo } from "@/components/restaurant-logo";
+
 
 export default function StorefrontHeader({ restaurant }: { restaurant: Restaurant }) {
     const initials = restaurant.name.substring(0, 2).toUpperCase();
@@ -33,21 +35,17 @@ export default function StorefrontHeader({ restaurant }: { restaurant: Restauran
                         {/* Left: Logo + Name */}
                         <div className="flex items-start gap-4 p-5 sm:p-6 flex-1">
                             {/* Logo */}
-                            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border-2 border-primary/20 shadow-xl overflow-hidden shrink-0 bg-gradient-to-br from-orange-400 via-red-500 to-pink-600 flex items-center justify-center ring-4 ring-white">
-                                {restaurant.logoUrl ? (
-                                    <img
-                                        src={restaurant.logoUrl}
-                                        alt={`${restaurant.name} logo`}
-                                        className="w-full h-full object-cover"
-                                    />
-                                ) : (
-                                    <span className="text-white text-2xl sm:text-3xl font-black tracking-wide">
-                                        {initials}
-                                    </span>
-                                )}
+                            <div className="relative shrink-0">
+                                <RestaurantLogo
+                                    name={restaurant.name}
+                                    logoUrl={restaurant.logoUrl}
+                                    size={100}
+                                    className="sm:w-24 sm:h-24 w-20 h-20 border-2 border-primary/20 shadow-xl ring-4 ring-white"
+                                />
                             </div>
 
                             {/* Name & details */}
+
                             <div className="flex-1 min-w-0 pt-1">
                                 <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight leading-none">
                                     {restaurant.name}
@@ -67,8 +65,8 @@ export default function StorefrontHeader({ restaurant }: { restaurant: Restauran
 
                                     {/* Open status */}
                                     <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg border ${restaurant.businessHours.isOpenNow
-                                            ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-                                            : "bg-red-50 border-red-200 text-red-600"
+                                        ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                                        : "bg-red-50 border-red-200 text-red-600"
                                         }`}>
                                         <span className={`w-2 h-2 rounded-full ${restaurant.businessHours.isOpenNow ? "bg-emerald-500 animate-pulse" : "bg-red-400"
                                             }`} />

@@ -22,6 +22,8 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { useRestaurant } from "@/components/restaurant-provider";
+import { RestaurantLogo } from "@/components/restaurant-logo";
+
 
 const navItems = [
     { name: "Özet İzleme", href: "/admin", icon: LayoutDashboard },
@@ -58,21 +60,17 @@ export default function AdminSidebar() {
 
     // ── Logo or Initial Avatar ─────────────────────────────────────────────
     const LogoOrAvatar = ({ size = "md" }: { size?: "sm" | "md" }) => {
-        const cls = size === "sm"
-            ? "w-7 h-7 text-xs"
-            : "w-8 h-8 text-sm";
-        return restaurantData.logoUrl ? (
-            <img
-                src={restaurantData.logoUrl}
-                alt={restaurantData.name}
-                className={`${cls} rounded-full object-cover border border-zinc-200 dark:border-zinc-700 shrink-0`}
+        const pixelSize = size === "sm" ? 28 : 32;
+        return (
+            <RestaurantLogo
+                name={restaurantData.name}
+                logoUrl={restaurantData.logoUrl}
+                size={pixelSize}
+                className="shrink-0"
             />
-        ) : (
-            <div className={`${cls} rounded-full bg-gradient-to-tr from-emerald-500 to-emerald-400 flex items-center justify-center text-white font-bold shrink-0`}>
-                {restaurantData.name.charAt(0)}
-            </div>
         );
     };
+
 
     const sidebarContent = (
         <div className="flex flex-col h-full bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 transition-colors duration-300">

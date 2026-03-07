@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Save, Upload, X, Image as ImageIcon, MessageCircle } from "lucide-react";
+import { RestaurantLogo } from "@/components/restaurant-logo";
+
 
 export default function AdminSettingsPage() {
     const { restaurantData, updateRestaurantData } = useRestaurant();
@@ -93,11 +95,14 @@ export default function AdminSettingsPage() {
             </div>
 
             {/* ── Logo Card ──────────────────────────────────────────────────── */}
-            <Card className="dark:border-zinc-800 dark:bg-zinc-950">
-                <CardHeader>
-                    <CardTitle>Restoran Logosu</CardTitle>
+            <Card className="dark:border-zinc-800 dark:bg-zinc-950 overflow-hidden">
+                <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center gap-2">
+                        <ImageIcon className="w-5 h-5 text-emerald-500" />
+                        Restoran Logosu
+                    </CardTitle>
                     <CardDescription>
-                        Logo hem yönetim panelinde hem de müşteri sipariş sayfasında görünür.
+                        Otomatik oluşturulan logo veya kendi özel logonuzu buradan yönetin.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -109,66 +114,77 @@ export default function AdminSettingsPage() {
                         onChange={e => { const f = e.target.files?.[0]; if (f) handleLogoFile(f); }}
                     />
 
-                    <div className="flex flex-col sm:flex-row gap-6 items-start">
-                        {/* Drop zone */}
-                        <div
-                            onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
-                            onDragLeave={() => setIsDragging(false)}
-                            onDrop={handleDrop}
-                            onClick={() => fileInputRef.current?.click()}
-                            className={`relative flex flex-col items-center justify-center w-full sm:w-48 h-36 rounded-xl border-2 border-dashed cursor-pointer transition-all select-none shrink-0 ${isDragging
-                                ? "border-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 scale-[1.02]"
-                                : "border-zinc-200 dark:border-zinc-700 hover:border-emerald-300 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
-                                }`}
-                        >
-                            {formData.logoUrl ? (
-                                <>
-                                    <img
-                                        src={formData.logoUrl}
-                                        alt="Logo önizleme"
-                                        className="absolute inset-0 w-full h-full object-contain rounded-xl p-2"
-                                    />
-                                    <div className="absolute inset-0 bg-black/40 rounded-xl opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
-                                        <span className="text-white text-sm font-semibold">Değiştir</span>
-                                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                        {/* Preview Section */}
+                        <div className="md:col-span-5 flex flex-col items-center justify-center p-6 bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl border border-zinc-100 dark:border-zinc-800 relative group">
+                            <Label className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-4 self-start">Görünüm Önizleme</Label>
+
+                            <div className="relative">
+                                <RestaurantLogo
+                                    name={formData.name}
+                                    logoUrl={formData.logoUrl}
+                                    size={140}
+                                    className="shadow-2xl ring-4 ring-white dark:ring-zinc-800"
+                                />
+
+                                {formData.logoUrl && (
                                     <button
                                         type="button"
-                                        onClick={e => { e.stopPropagation(); setFormData(prev => ({ ...prev, logoUrl: "" })); }}
-                                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 z-10 shadow"
+                                        onClick={() => setFormData(prev => ({ ...prev, logoUrl: "" }))}
+                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 shadow-lg transition-transform hover:scale-110 active:scale-95"
+                                        title="Logoyu Kaldır"
                                     >
-                                        <X className="w-3 h-3" />
+                                        <X className="w-4 h-4" />
                                     </button>
-                                </>
-                            ) : (
-                                <>
-                                    <div className={`p-3 rounded-full mb-2 ${isDragging ? "bg-emerald-100 dark:bg-emerald-500/20" : "bg-zinc-100 dark:bg-zinc-800"}`}>
-                                        <Upload className={`w-6 h-6 ${isDragging ? "text-emerald-600" : "text-zinc-400"}`} />
-                                    </div>
-                                    <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400 text-center px-2">
-                                        {isDragging ? "Bırakın!" : "Logo yükle"}
-                                    </p>
-                                    <p className="text-xs text-zinc-400 mt-1">PNG, JPG, SVG</p>
-                                </>
-                            )}
+                                )}
+                            </div>
+
+                            <p className="mt-4 text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                                {formData.logoUrl ? "Özel Logo Aktif" : "Otomatik Logo Aktif"}
+                            </p>
                         </div>
 
-                        {/* Right: info + preview pill */}
-                        <div className="space-y-3 text-sm text-zinc-500 dark:text-zinc-400">
-                            <p>Logonuzu bilgisayarınızdan sürükleyip bırakın veya alana tıklayarak seçin.</p>
-                            <p className="text-xs">Önerilen boyut: <strong>400×400 px</strong> veya daha büyük, kare veya yuvarlak.</p>
-                            {formData.logoUrl && (
-                                <div className="flex items-center gap-2 mt-2 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 rounded-lg px-3 py-2">
-                                    <ImageIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                                    <span className="text-emerald-700 dark:text-emerald-400 font-medium text-sm">Logo yüklendi</span>
+                        {/* Action Section */}
+                        <div className="md:col-span-7 space-y-5">
+                            <div
+                                onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
+                                onDragLeave={() => setIsDragging(false)}
+                                onDrop={handleDrop}
+                                onClick={() => fileInputRef.current?.click()}
+                                className={`group flex flex-col items-center justify-center py-10 px-6 rounded-2xl border-2 border-dashed cursor-pointer transition-all duration-300 ${isDragging
+                                    ? "border-emerald-500 bg-emerald-500/5 scale-[1.01]"
+                                    : "border-zinc-200 dark:border-zinc-800 hover:border-emerald-400 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                                    }`}
+                            >
+                                <div className={`p-4 rounded-2xl mb-4 transition-colors ${isDragging ? "bg-emerald-500 text-white" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 group-hover:text-emerald-500 group-hover:bg-emerald-50 dark:group-hover:bg-emerald-500/10"
+                                    }`}>
+                                    <Upload className="w-8 h-8" />
                                 </div>
-                            )}
-                            <p className="text-xs text-zinc-400">
-                                ⚠️ Değişiklikler <strong>Kaydet</strong> butonuna bastıktan sonra siteye yansır.
-                            </p>
+
+                                <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-100 mb-1">
+                                    {isDragging ? "Buraya Bırakın" : "Kendi Logonuzu Yükleyin"}
+                                </h4>
+                                <p className="text-sm text-zinc-500 text-center max-w-[240px]">
+                                    Logonuzu buraya sürükleyin veya <span className="text-emerald-500 font-semibold underline decoration-2 underline-offset-4">bilgisayarınızdan seçin</span>.
+                                </p>
+                                <p className="text-[10px] uppercase font-bold tracking-widest text-zinc-400 mt-4">PNG, JPG veya SVG (Max 5MB)</p>
+                            </div>
+
+                            <div className="flex flex-col space-y-2">
+                                <div className="flex items-start gap-2 text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                                    <div className="w-1 h-1 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+                                    <span>Logonuz yoksa sistem dükkan isminizden <strong>özel vektörel bir logo</strong> üretir.</span>
+                                </div>
+                                <div className="flex items-start gap-2 text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                                    <div className="w-1 h-1 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+                                    <span>Yüklenen logolar kare formatta ve şeffaf (PNG/SVG) olduğunda daha şık görünür.</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </CardContent>
             </Card>
+
 
             {/* ── Temel Bilgiler ─────────────────────────────────────────────── */}
             <Card className="dark:border-zinc-800 dark:bg-zinc-950">
