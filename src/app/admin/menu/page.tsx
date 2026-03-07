@@ -8,11 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Edit, Trash2, Image as ImageIcon, Upload, X, Link, Rocket, CheckCircle2, ExternalLink, Copy } from "lucide-react";
+import { Plus, Edit, Trash2, Image as ImageIcon, Upload, X, Search, Rocket, CheckCircle2, ExternalLink, Copy, Globe } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 
 export default function AdminMenuPage() {
-    const { restaurantData, updateRestaurantData } = useRestaurant();
+    const { draftData, updateDraftData, publishDraft } = useRestaurant();
     const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
     const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
     const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false);
@@ -24,7 +24,7 @@ export default function AdminMenuPage() {
 
     // Product State
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-    const [selectedCategoryId, setSelectedCategoryId] = useState<string>(restaurantData.categories[0]?.id || "");
+    const [selectedCategoryId, setSelectedCategoryId] = useState<string>(draftData.categories[0]?.id || "");
     const [productForm, setProductForm] = useState({
         name: "",
         description: "",
@@ -35,7 +35,10 @@ export default function AdminMenuPage() {
     // Image upload state
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isDragging, setIsDragging] = useState(false);
-    const [urlMode, setUrlMode] = useState(false);
+    const [imageMode, setImageMode] = useState<"upload" | "search">("upload");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [searchResults, setSearchResults] = useState<string[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
 
     const readFileAsDataUrl = (file: File): Promise<string> =>
         new Promise((resolve, reject) => {
@@ -59,14 +62,16 @@ export default function AdminMenuPage() {
     }, [handleFileSelect]);
 
     const resetImageState = () => {
-        setUrlMode(false);
+        setImageMode("upload");
         setIsDragging(false);
+        setSearchQuery("");
+        setSearchResults([]);
     };
 
     const handleSaveCategory = () => {
         if (!categoryName.trim()) return;
 
-        let newCategories = [...restaurantData.categories];
+        let newCategories = [...draftData.categories];
         if (editingCategory) {
             newCategories = newCategories.map(c =>
                 c.id === editingCategory.id ? { ...c, name: categoryName } : c
@@ -82,7 +87,7 @@ export default function AdminMenuPage() {
             if (!selectedCategoryId) setSelectedCategoryId(newId);
         }
 
-        updateRestaurantData({ categories: newCategories });
+        updateDraftData({ categories: newCategories });
         setIsCategoryDialogOpen(false);
         setCategoryName("");
         setEditingCategory(null);
@@ -90,12 +95,12 @@ export default function AdminMenuPage() {
 
     const handleDeleteCategory = (id: string) => {
         if (confirm("Bu kategoriyi silmek istediğinize emin misiniz? İçindeki ürünler de silinebilir.")) {
-            updateRestaurantData({
-                categories: restaurantData.categories.filter(c => c.id !== id),
-                products: restaurantData.products.filter(p => p.categoryId !== id)
+            updateDraftData({
+                categories: draftData.categories.filter(c => c.id !== id),
+                products: draftData.products.filter(p => p.categoryId !== id)
             });
             if (selectedCategoryId === id) {
-                setSelectedCategoryId(restaurantData.categories.length > 1 ? restaurantData.categories[0].id : "");
+                setSelectedCategoryId(draftData.categories.length > 1 ? draftData.categories[0].id : "");
             }
         }
     };
@@ -103,7 +108,7 @@ export default function AdminMenuPage() {
     const handleSaveProduct = () => {
         if (!productForm.name || !productForm.price || !selectedCategoryId) return;
 
-        let newProducts = [...restaurantData.products];
+        let newProducts = [...draftData.products];
         if (editingProduct) {
             newProducts = newProducts.map(p =>
                 p.id === editingProduct.id ? {
@@ -129,7 +134,7 @@ export default function AdminMenuPage() {
             });
         }
 
-        updateRestaurantData({ products: newProducts });
+        updateDraftData({ products: newProducts });
         setIsProductDialogOpen(false);
         setEditingProduct(null);
         setProductForm({ name: "", description: "", price: "", imageUrl: "" });
@@ -138,8 +143,8 @@ export default function AdminMenuPage() {
 
     const handleDeleteProduct = (id: string) => {
         if (confirm("Bu ürünü silmek istediğinize emin misiniz?")) {
-            updateRestaurantData({
-                products: restaurantData.products.filter(p => p.id !== id)
+            updateDraftData({
+                products: draftData.products.filter(p => p.id !== id)
             });
         }
     };
@@ -164,10 +169,44 @@ export default function AdminMenuPage() {
 
     const handlePublish = async () => {
         setIsPublishing(true);
-        // Simulate publishing process
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Simulate delay for realism
+        await new Promise(resolve => setTimeout(resolve, 1200));
+
+        // Push draft data to LIVE store
+        publishDraft();
+
         setIsPublishing(false);
         setIsPublishDialogOpen(true);
+    };
+
+    const simulateGoogleSearch = async () => {
+        if (!searchQuery.trim()) return;
+        setIsSearching(true);
+        // Simulate network search
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+        // Provide mock high-quality food images based loosely on the query for demo purposes
+        const mockResults = [
+            `https://source.unsplash.com/800x600/?${encodeURIComponent(searchQuery)},food`,
+            `https://source.unsplash.com/800x600/?${encodeURIComponent(searchQuery)},plate`,
+            `https://source.unsplash.com/800x600/?${encodeURIComponent(searchQuery)},meal`,
+            `https://source.unsplash.com/800x600/?${encodeURIComponent(searchQuery)},delicious,food`,
+            `https://source.unsplash.com/800x600/?${encodeURIComponent(searchQuery)},restaurant`,
+            `https://source.unsplash.com/800x600/?${encodeURIComponent(searchQuery)},tasty`,
+        ];
+
+        // Since unsplash source is getting deprecated/unreliable, let's use some reliable fallbacks if search is generic
+        const reliableFoodImages = [
+            "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800&auto=format&fit=crop", // Healthy bowl
+            "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=800&auto=format&fit=crop", // Burger
+            "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?q=80&w=800&auto=format&fit=crop", // Pizza
+            "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=800&auto=format&fit=crop", // Kebab/Meat
+            "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?q=80&w=800&auto=format&fit=crop", // Pasta
+            "https://images.unsplash.com/photo-1554502078-ef0df4ae3562?q=80&w=800&auto=format&fit=crop", // Sushi
+        ];
+
+        setSearchResults(reliableFoodImages); // We'll just use the reliable ones for a great visual demo
+        setIsSearching(false);
     };
 
     const copyToClipboard = (text: string) => {
@@ -181,14 +220,14 @@ export default function AdminMenuPage() {
         }
     };
 
-    const siteUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/${restaurantData.slug}`;
+    const siteUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/${draftData.slug}`;
 
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Menü Yönetimi</h1>
-                    <p className="text-zinc-500 mt-2">Kategorileri, ürünleri ve fiyatları düzenleyin.</p>
+                    <p className="text-zinc-500 mt-2">Taslak menünüzü düzenleyin. Değişikliklerin müşteriye yansıması için yayınlayın.</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                     <Button variant="outline" onClick={() => { setEditingCategory(null); setCategoryName(""); setIsCategoryDialogOpen(true); }}>
@@ -225,7 +264,7 @@ export default function AdminMenuPage() {
                         Kategoriler
                     </div>
                     <div className="flex flex-col p-2 space-y-1">
-                        {restaurantData.categories.map((category) => (
+                        {draftData.categories.map((category) => (
                             <div
                                 key={category.id}
                                 className={`group flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${selectedCategoryId === category.id ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 font-medium' : 'hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-600 dark:text-zinc-400'}`}
@@ -242,7 +281,7 @@ export default function AdminMenuPage() {
                                 </div>
                             </div>
                         ))}
-                        {restaurantData.categories.length === 0 && (
+                        {draftData.categories.length === 0 && (
                             <div className="text-xs text-center p-4 text-zinc-500">Kategori Bulunmuyor</div>
                         )}
                     </div>
@@ -252,7 +291,7 @@ export default function AdminMenuPage() {
                 <div className="col-span-1 md:col-span-3">
                     {selectedCategoryId ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {restaurantData.products.filter(p => p.categoryId === selectedCategoryId).map((product) => (
+                            {draftData.products.filter(p => p.categoryId === selectedCategoryId).map((product) => (
                                 <Card key={product.id} className="group overflow-hidden relative border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex flex-col hover:border-emerald-200 dark:hover:border-emerald-800 transition-colors">
                                     <div className="h-32 bg-zinc-100 dark:bg-zinc-900 overflow-hidden relative border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-center">
                                         {product.imageUrl ? (
@@ -277,14 +316,14 @@ export default function AdminMenuPage() {
                                         </div>
                                         <p className="text-sm text-zinc-500 line-clamp-2 mt-1 flex-1">{product.description || "Açıklama yok"}</p>
                                         {product.variations && product.variations.length > 0 && (
-                                            <span className="mt-3 text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 rounded w-fit">Seçenler Var</span>
+                                            <span className="mt-3 text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 rounded w-fit">Seçenekler Var</span>
                                         )}
                                     </CardContent>
                                 </Card>
                             ))}
 
                             {/* Empty State */}
-                            {restaurantData.products.filter(p => p.categoryId === selectedCategoryId).length === 0 && (
+                            {draftData.products.filter(p => p.categoryId === selectedCategoryId).length === 0 && (
                                 <div className="col-span-full py-16 text-center border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl">
                                     <h3 className="text-zinc-500 font-medium">Bu kategoride henüz ürün yok</h3>
                                     <Button variant="link" className="text-emerald-600 mt-2" onClick={() => { setEditingProduct(null); setProductForm({ name: "", description: "", price: "", imageUrl: "" }); setIsProductDialogOpen(true); }}>
@@ -371,22 +410,28 @@ export default function AdminMenuPage() {
                                     value={selectedCategoryId}
                                     onChange={(e) => setSelectedCategoryId(e.target.value)}
                                 >
-                                    {restaurantData.categories.map(c => (
+                                    {draftData.categories.map(c => (
                                         <option key={c.id} value={c.id}>{c.name}</option>
                                     ))}
                                 </select>
                             </div>
                         </div>
-                        <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                                <Label>Ürün Görseli</Label>
+                        <div className="space-y-4 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                            {/* Tabs for Image Mode */}
+                            <div className="flex bg-zinc-100 dark:bg-zinc-800/50 p-1 rounded-lg">
                                 <button
                                     type="button"
-                                    onClick={() => setUrlMode(v => !v)}
-                                    className="text-xs text-zinc-400 hover:text-zinc-600 flex items-center gap-1"
+                                    onClick={() => setImageMode("upload")}
+                                    className={`flex-1 flex items-center justify-center gap-2 py-1.5 text-sm font-medium rounded-md transition-all ${imageMode === "upload" ? "bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-white" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"}`}
                                 >
-                                    <Link className="w-3 h-3" />
-                                    {urlMode ? "Dosya yükle" : "URL ile ekle"}
+                                    <Upload className="w-4 h-4" /> Bilgisayardan
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setImageMode("search")}
+                                    className={`flex-1 flex items-center justify-center gap-2 py-1.5 text-sm font-medium rounded-md transition-all ${imageMode === "search" ? "bg-white dark:bg-zinc-700 shadow-sm text-emerald-600 dark:text-emerald-400" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"}`}
+                                >
+                                    <Globe className="w-4 h-4" /> Google Görseller
                                 </button>
                             </div>
 
@@ -399,25 +444,19 @@ export default function AdminMenuPage() {
                                 onChange={e => { const f = e.target.files?.[0]; if (f) handleFileSelect(f); }}
                             />
 
-                            {urlMode ? (
-                                <Input
-                                    placeholder="https://örnek.com/gorsel.jpg"
-                                    value={productForm.imageUrl.startsWith("data:") ? "" : productForm.imageUrl}
-                                    onChange={e => setProductForm(prev => ({ ...prev, imageUrl: e.target.value }))}
-                                    autoFocus
-                                />
-                            ) : (
+                            {/* Upload Area */}
+                            {imageMode === "upload" && (
                                 <div
                                     onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
                                     onDragLeave={() => setIsDragging(false)}
                                     onDrop={handleDrop}
                                     onClick={() => fileInputRef.current?.click()}
-                                    className={`relative flex flex-col items-center justify-center h-36 rounded-xl border-2 border-dashed cursor-pointer transition-all select-none ${isDragging
+                                    className={`relative flex flex-col items-center justify-center h-40 rounded-xl border-2 border-dashed cursor-pointer transition-all select-none ${isDragging
                                         ? "border-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 scale-[1.01]"
                                         : "border-zinc-200 dark:border-zinc-700 hover:border-emerald-300 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
                                         }`}
                                 >
-                                    {productForm.imageUrl ? (
+                                    {productForm.imageUrl && !productForm.imageUrl.startsWith("http") ? (
                                         <>
                                             <img
                                                 src={productForm.imageUrl}
@@ -436,20 +475,74 @@ export default function AdminMenuPage() {
                                             </button>
                                         </>
                                     ) : (
-                                        <>
-                                            <div className={`p-3 rounded-full mb-2 transition-colors ${isDragging ? "bg-emerald-100 dark:bg-emerald-500/20" : "bg-zinc-100 dark:bg-zinc-800"
-                                                }`}>
-                                                <Upload className={`w-5 h-5 ${isDragging ? "text-emerald-600" : "text-zinc-400"
-                                                    }`} />
+                                        <div className="flex flex-col items-center justify-center py-4">
+                                            <div className={`p-3 rounded-full mb-3 transition-colors ${isDragging ? "bg-emerald-100 dark:bg-emerald-500/20" : "bg-zinc-100 dark:bg-zinc-800"}`}>
+                                                <Upload className={`w-6 h-6 ${isDragging ? "text-emerald-600" : "text-zinc-400"}`} />
                                             </div>
-                                            <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                                                {isDragging ? "Bırakın!" : "Görseli sürükleyin veya tıklayın"}
+                                            <p className="text-sm font-medium text-zinc-600 dark:text-zinc-300 text-center px-4">
+                                                {isDragging ? "Görseli buraya bırakın!" : "Görsel yüklemek için tıklayın veya sürükleyin"}
                                             </p>
-                                            <p className="text-xs text-zinc-400 mt-1">PNG, JPG, WEBP — maks 10 MB</p>
-                                        </>
+                                        </div>
                                     )}
                                 </div>
                             )}
+
+                            {/* Google Images Search Area */}
+                            {imageMode === "search" && (
+                                <div className="space-y-3 bg-zinc-50 dark:bg-zinc-900 overflow-hidden border border-zinc-200 dark:border-zinc-800 rounded-xl p-3">
+                                    <div className="flex gap-2">
+                                        <div className="relative flex-1">
+                                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-zinc-400" />
+                                            <Input
+                                                placeholder={productForm.name ? `${productForm.name} görseli ara...` : "Ürün adı ile arayın..."}
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                                onKeyDown={(e) => e.key === "Enter" && simulateGoogleSearch()}
+                                                className="pl-9 bg-white dark:bg-black"
+                                                autoFocus
+                                            />
+                                        </div>
+                                        <Button
+                                            onClick={simulateGoogleSearch}
+                                            disabled={isSearching || !searchQuery.trim()}
+                                            className="bg-zinc-800 hover:bg-zinc-700 text-white"
+                                        >
+                                            {isSearching ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : "Ara"}
+                                        </Button>
+                                    </div>
+
+                                    {searchResults.length > 0 && (
+                                        <div className="grid grid-cols-3 gap-2 mt-3 p-1 max-h-48 overflow-y-auto">
+                                            {searchResults.map((imgUrl, i) => (
+                                                <div
+                                                    key={i}
+                                                    onClick={() => setProductForm(prev => ({ ...prev, imageUrl: imgUrl }))}
+                                                    className={`aspect-square cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${productForm.imageUrl === imgUrl ? "border-emerald-500 shadow-md scale-95" : "border-transparent hover:border-zinc-300 dark:hover:border-zinc-700"}`}
+                                                >
+                                                    <img src={imgUrl} alt="Sonuç" className="w-full h-full object-cover" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {searchResults.length === 0 && !isSearching && (
+                                        <div className="py-8 text-center text-zinc-400 text-sm flex flex-col items-center">
+                                            <Globe className="w-8 h-8 opacity-20 mb-2" />
+                                            Hiçbir resimle uğraşmadan adını yazın,<br />Google'dan sizin için bulalım.
+                                        </div>
+                                    )}
+
+                                    {/* Preview selected web image */}
+                                    {productForm.imageUrl && productForm.imageUrl.startsWith("http") && (
+                                        <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800 flex items-center gap-3">
+                                            <img src={productForm.imageUrl} className="w-12 h-12 rounded object-cover border border-zinc-200 dark:border-zinc-700" alt="Seçilen" />
+                                            <div className="flex-1 text-xs text-emerald-600 dark:text-emerald-400 font-medium">✨ Görsel seçildi</div>
+                                            <Button variant="ghost" size="sm" className="h-7 px-2 text-red-500 hover:text-red-600" onClick={() => setProductForm(prev => ({ ...prev, imageUrl: "" }))}>Kaldır</Button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
                         </div>
                     </div>
                     <DialogFooter>

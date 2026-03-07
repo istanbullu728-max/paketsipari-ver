@@ -24,13 +24,18 @@ export type CartItem = {
 };
 
 export default function StorefrontClient({
-    categories,
-    products,
+    // Keep props signature for backwards compatibility but we will ignore them
+    // and use the single source of truth from Context instead.
+    categories: _initialCategories,
+    products: _initialProducts,
 }: {
-    categories: Category[];
-    products: Product[];
+    categories?: Category[];
+    products?: Product[];
 }) {
     const { restaurantData: restaurant } = useRestaurant();
+    const categories = restaurant.categories;
+    const products = restaurant.products;
+
     const [cart, setCart] = useState<CartItem[]>([]);
     const [selectedCategory, setSelectedCategory] = useState(categories[0]?.id || "");
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -86,8 +91,8 @@ export default function StorefrontClient({
                                     setSearchQuery("");
                                 }}
                                 className={`whitespace-nowrap flex-shrink-0 px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${selectedCategory === c.id
-                                        ? "bg-primary text-white shadow-md shadow-primary/30 scale-105"
-                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900"
+                                    ? "bg-primary text-white shadow-md shadow-primary/30 scale-105"
+                                    : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900"
                                     }`}
                             >
                                 {c.name}
