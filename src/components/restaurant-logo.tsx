@@ -32,79 +32,77 @@ export function RestaurantLogo({
         );
     }
 
-    // Varsayılan logo için tek ama güçlü bir baş harf
-    const initial = name.trim().charAt(0).toUpperCase();
+    // Varsayılan logo tasarımı: Cloche (Gümüş Kapak) + Tipografi
+    const restaurantName = name || "Restoran";
 
-    // Modern SaaS Renk Paleti (Zinc & Indigo Accent)
-    const bgStart = "#18181b"; // Zinc 900
-    const bgEnd = "#09090b";   // Zinc 950
-    const accentColor = "#6366f1"; // Indigo 500
-    const textColor = "#ffffff";
+    // Renk Paleti
+    const maroon = "#A31D1D"; // İkon ve alt yazı rengi
+    const darkGray = "#1A1A1A"; // Restoran adı rengi
 
     return (
         <div
-            className={`relative inline-flex items-center justify-center shrink-0 overflow-hidden ${className}`}
+            className={`relative inline-flex items-center justify-center shrink-0 ${className}`}
             style={{ width: size, height: size }}
         >
             <svg
-                viewBox="0 0 100 100"
+                viewBox="0 0 200 200"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
                 className="w-full h-full"
             >
-                <defs>
-                    {/* Yumuşak Köşeli Kare (Squircle) Yolu */}
-                    <clipPath id="squircleClip">
-                        <path d="M0,50 C0,10 10,0 50,0 C90,0 100,10 100,50 C100,90 90,100 50,100 C10,100 0,90 0,50" />
-                    </clipPath>
+                {/* --- CLOCHE ICON --- */}
+                <g transform="translate(50, 20)">
+                    {/* Handle */}
+                    <circle cx="50" cy="15" r="7" fill={maroon} />
 
-                    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stopColor={bgStart} />
-                        <stop offset="100%" stopColor={bgEnd} />
-                    </linearGradient>
+                    {/* Dome */}
+                    <path d="M10,65 C10,35 30,22 50,22 C70,22 90,35 90,65 L10,65 Z" fill={maroon} />
 
-                    <filter id="textGlow" x="-20%" y="-20%" width="140%" height="140%">
-                        <feGaussianBlur in="SourceAlpha" stdDeviation="1" />
-                        <feOffset dx="0" dy="0" result="offsetblur" />
-                        <feComponentTransfer>
-                            <feFuncA type="linear" slope="0.4" />
-                        </feComponentTransfer>
-                        <feMerge>
-                            <feMergeNode />
-                            <feMergeNode in="SourceGraphic" />
-                        </feMerge>
-                    </filter>
-                </defs>
+                    {/* Base Layers */}
+                    <rect x="5" y="68" width="90" height="6" fill={maroon} />
+                    <rect x="0" y="77" width="100" height="3" fill={maroon} />
 
-                {/* Arkaplan Formu (Squircle) */}
-                <path
-                    d="M0,50 C0,10 10,0 50,0 C90,0 100,10 100,50 C100,90 90,100 50,100 C10,100 0,90 0,50"
-                    fill="url(#bgGrad)"
-                />
+                    {/* Steam Elements */}
+                    <path d="M100,5 C105,15 95,25 100,35" stroke={maroon} strokeWidth="3" strokeLinecap="round" strokeOpacity="0.7" fill="none" />
+                    <path d="M110,15 C115,25 105,35 110,45" stroke={maroon} strokeWidth="3" strokeLinecap="round" strokeOpacity="0.7" fill="none" />
+                    <path d="M92,-5 C97,5 87,15 92,25" stroke={maroon} strokeWidth="3" strokeLinecap="round" strokeOpacity="0.7" fill="none" />
+                </g>
 
-                {/* Sol Kenar Accent Çizgisi */}
-                <rect x="0" y="30" width="3" height="40" rx="1.5" fill={accentColor} fillOpacity="0.8" />
-
-                {/* Baş Harf */}
+                {/* --- TEXT SECTION --- */}
+                {/* Restaurant Name (Serif) */}
                 <text
-                    x="52"
-                    y="54"
-                    dominantBaseline="central"
+                    x="100"
+                    y="135"
+                    dominantBaseline="middle"
                     textAnchor="middle"
-                    fill={textColor}
-                    filter="url(#textGlow)"
+                    fill={darkGray}
                     style={{
-                        fontSize: "52px",
-                        fontWeight: 900,
-                        fontFamily: "var(--font-heading), 'Inter', 'Outfit', sans-serif",
-                        letterSpacing: "-0.04em"
+                        fontSize: restaurantName.length > 12 ? "24px" : "32px",
+                        fontWeight: 400,
+                        fontFamily: "'Times New Roman', serif",
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase"
                     }}
                 >
-                    {initial}
+                    {restaurantName}
                 </text>
 
-                {/* Sağ Üst Dekoratif Nokta */}
-                <circle cx="80" cy="20" r="3" fill={accentColor} />
+                {/* "restoran" sublabel (Sans-serif) */}
+                <text
+                    x="100"
+                    y="165"
+                    dominantBaseline="middle"
+                    textAnchor="middle"
+                    fill={maroon}
+                    style={{
+                        fontSize: "18px",
+                        fontWeight: 500,
+                        fontFamily: "'Inter', 'Segoe UI', sans-serif",
+                        letterSpacing: "0.2em",
+                    }}
+                >
+                    restoran
+                </text>
             </svg>
         </div>
     );
