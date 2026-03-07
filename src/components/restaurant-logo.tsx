@@ -32,20 +32,18 @@ export function RestaurantLogo({
         );
     }
 
-    // Varsayılan logo için baş harfler (varsa ilk iki kelimenin baş harfleri)
-    const nameParts = name.trim().split(/\s+/);
-    const initials = nameParts.length > 1
-        ? (nameParts[0].charAt(0) + nameParts[1].charAt(0)).toUpperCase()
-        : name.trim().substring(0, 2).toUpperCase();
+    // Varsayılan logo için tek ama güçlü bir baş harf
+    const initial = name.trim().charAt(0).toUpperCase();
 
-    // Şık ve Premium Renk Paleti (Altın & Koyu Antrasit)
-    const primaryBg = "#0f172a"; // Deep Slate/Navy
-    const accentGold = "#fbbf24"; // Amber/Gold
-    const softWhite = "#f8fafc";
+    // Modern SaaS Renk Paleti (Zinc & Indigo Accent)
+    const bgStart = "#18181b"; // Zinc 900
+    const bgEnd = "#09090b";   // Zinc 950
+    const accentColor = "#6366f1"; // Indigo 500
+    const textColor = "#ffffff";
 
     return (
         <div
-            className={`relative inline-flex items-center justify-center shrink-0 overflow-hidden rounded-full shadow-lg ${className}`}
+            className={`relative inline-flex items-center justify-center shrink-0 overflow-hidden ${className}`}
             style={{ width: size, height: size }}
         >
             <svg
@@ -55,16 +53,21 @@ export function RestaurantLogo({
                 className="w-full h-full"
             >
                 <defs>
-                    <linearGradient id="premiumGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#1e293b" />
-                        <stop offset="100%" stopColor="#020617" />
+                    {/* Yumuşak Köşeli Kare (Squircle) Yolu */}
+                    <clipPath id="squircleClip">
+                        <path d="M0,50 C0,10 10,0 50,0 C90,0 100,10 100,50 C100,90 90,100 50,100 C10,100 0,90 0,50" />
+                    </clipPath>
+
+                    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor={bgStart} />
+                        <stop offset="100%" stopColor={bgEnd} />
                     </linearGradient>
 
-                    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
-                        <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
-                        <feOffset dx="0" dy="1" result="offsetblur" />
+                    <filter id="textGlow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur in="SourceAlpha" stdDeviation="1" />
+                        <feOffset dx="0" dy="0" result="offsetblur" />
                         <feComponentTransfer>
-                            <feFuncA type="linear" slope="0.3" />
+                            <feFuncA type="linear" slope="0.4" />
                         </feComponentTransfer>
                         <feMerge>
                             <feMergeNode />
@@ -73,46 +76,35 @@ export function RestaurantLogo({
                     </filter>
                 </defs>
 
-                {/* Ana Arkaplan */}
-                <circle cx="50" cy="50" r="50" fill="url(#premiumGrad)" />
+                {/* Arkaplan Formu (Squircle) */}
+                <path
+                    d="M0,50 C0,10 10,0 50,0 C90,0 100,10 100,50 C100,90 90,100 50,100 C10,100 0,90 0,50"
+                    fill="url(#bgGrad)"
+                />
 
-                {/* Dış İnce Çerçeve */}
-                <circle cx="50" cy="50" r="46" stroke={accentGold} strokeWidth="0.5" strokeOpacity="0.4" />
+                {/* Sol Kenar Accent Çizgisi */}
+                <rect x="0" y="30" width="3" height="40" rx="1.5" fill={accentColor} fillOpacity="0.8" />
 
-                {/* İç Dekoratif Çerçeve (Noktalı veya Kesikli) */}
-                <circle cx="50" cy="50" r="42" stroke={accentGold} strokeWidth="1.5" strokeDasharray="1 3" strokeOpacity="0.6" />
-
-                {/* Orta Logo Alanı */}
-                <circle cx="50" cy="50" r="35" fillOpacity="0.05" fill={softWhite} stroke={accentGold} strokeWidth="1" />
-
-                {/* Baş Harfler */}
+                {/* Baş Harf */}
                 <text
-                    x="50"
-                    y="52"
+                    x="52"
+                    y="54"
                     dominantBaseline="central"
                     textAnchor="middle"
-                    fill={softWhite}
-                    filter="url(#softShadow)"
+                    fill={textColor}
+                    filter="url(#textGlow)"
                     style={{
-                        fontSize: initials.length > 1 ? "28px" : "38px",
-                        fontWeight: 800,
-                        fontFamily: "var(--font-heading), 'Outfit', 'Inter', sans-serif",
-                        letterSpacing: "0.05em",
-                        textTransform: "uppercase"
+                        fontSize: "52px",
+                        fontWeight: 900,
+                        fontFamily: "var(--font-heading), 'Inter', 'Outfit', sans-serif",
+                        letterSpacing: "-0.04em"
                     }}
                 >
-                    {initials}
+                    {initial}
                 </text>
 
-                {/* Est / Süsleme Detayı */}
-                <path
-                    d="M35 65 L45 65 M55 65 L65 65"
-                    stroke={accentGold}
-                    strokeWidth="1"
-                    strokeLinecap="round"
-                    strokeOpacity="0.8"
-                />
-                <circle cx="50" cy="65" r="1.5" fill={accentGold} />
+                {/* Sağ Üst Dekoratif Nokta */}
+                <circle cx="80" cy="20" r="3" fill={accentColor} />
             </svg>
         </div>
     );
