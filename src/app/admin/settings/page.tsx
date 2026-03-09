@@ -6,9 +6,19 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Save, Upload, X, Image as ImageIcon, MessageCircle } from "lucide-react";
+import { Save, Upload, X, Image as ImageIcon, MessageCircle, Clock, Power } from "lucide-react";
 import { RestaurantLogo } from "@/components/restaurant-logo";
+import { Switch } from "@/components/ui/switch";
 
+const DAYS_MAP: Record<string, string> = {
+    'pazartesi': 'Pazartesi',
+    'sali': 'Salı',
+    'carsamba': 'Çarşamba',
+    'persembe': 'Perşembe',
+    'cuma': 'Cuma',
+    'cumartesi': 'Cumartesi',
+    'pazar': 'Pazar',
+};
 
 export default function AdminSettingsPage() {
     const { restaurantData, updateRestaurantData } = useRestaurant();
@@ -20,6 +30,8 @@ export default function AdminSettingsPage() {
         closeTime: restaurantData.businessHours.close,
         slug: restaurantData.slug,
         logoUrl: restaurantData.logoUrl || "",
+        isManualClosed: restaurantData.businessHours.isManualClosed,
+        days: restaurantData.businessHours.days,
     });
     const [saved, setSaved] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
@@ -34,11 +46,26 @@ export default function AdminSettingsPage() {
             closeTime: restaurantData.businessHours.close,
             slug: restaurantData.slug,
             logoUrl: restaurantData.logoUrl || "",
+            isManualClosed: restaurantData.businessHours.isManualClosed,
+            days: restaurantData.businessHours.days,
         });
     }, [restaurantData]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    };
+
+    const handleDayChange = (dayKey: string, field: 'open' | 'close' | 'isClosed', value: string | boolean) => {
+        setFormData(prev => ({
+            ...prev,
+            days: {
+                ...prev.days,
+                [dayKey]: {
+                    ...prev.days[dayKey],
+                    [field]: value
+                }
+            }
+        }));
     };
 
     // ── Logo upload helpers ──────────────────────────────────────────────
@@ -75,6 +102,8 @@ export default function AdminSettingsPage() {
                 ...restaurantData.businessHours,
                 open: formData.openTime,
                 close: formData.closeTime,
+                isManualClosed: formData.isManualClosed,
+                days: formData.days,
             }
         });
         setSaved(true);
@@ -93,6 +122,32 @@ export default function AdminSettingsPage() {
                     {saved ? "Kaydedildi ✓" : "Kaydet"}
                 </Button>
             </div>
+
+            {/* ── Restoran Durumu (MANUAL OPEN/CLOSE) ────────────────────────── */}
+            <Card className={`dark:border-zinc-800 transition-colors duration-500 ${formData.isManualClosed ? "bg-red-50/50 dark:bg-red-900/10 border-red-200" : "dark:bg-zinc-950"}`}>
+                <CardHeader className="pb-4">
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                            <CardTitle className="flex items-center gap-2">
+                                <Power className={`w-5 h-5 ${formData.isManualClosed ? "text-red-500" : "text-emerald-500"}`} />
+                                Restoran Durumu
+                            </CardTitle>
+                            <CardDescription>
+                                Restoranı anlık olarak müşterilere açın veya kapatın.
+                            </CardDescription>
+                        </div>
+                        <div className="flex items-center gap-3 bg-white dark:bg-zinc-900 p-2 rounded-2xl border dark:border-zinc-800 shadow-sm">
+                            <span className={`text-xs font-bold uppercase tracking-wider ${formData.isManualClosed ? "text-red-500" : "text-emerald-500"}`}>
+                                {formData.isManualClosed ? "KAPALI" : "AÇIK"}
+                            </span>
+                            <Switch
+                                checked={!formData.isManualClosed}
+                                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isManualClosed: !checked }))}
+                            />
+                        </div>
+                    </div>
+                </CardHeader>
+            </Card>
 
             {/* ── Logo Card ──────────────────────────────────────────────────── */}
             <Card className="dark:border-zinc-800 dark:bg-zinc-950 overflow-hidden">
@@ -200,6 +255,75 @@ export default function AdminSettingsPage() {
                 </CardContent>
             </Card>
 
+            {/* ── Haftalık Çalışma Saatleri ───────────────────────────────────── */}
+            <Card className="dark:border-zinc-800 dark:bg-zinc-950 overflow-hidden">
+                <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-emerald-500" />
+                        Haftalık Çalışma Saatleri
+                    </CardTitle>
+                    <CardDescription>
+                        Her gün için ayrı açılış ve kapanış saatlerini belirleyin.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="p-0">
+                    <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                        {Object.entries(DAYS_MAP).map(([key, label]) => {
+                            const dayConfig = formData.days[key];
+                            return (
+                                <div key={key} className={`flex flex-col md:flex-row md:items-center justify-between p-4 md:p-6 transition-colors ${dayConfig.isClosed ? "bg-zinc-50/50 dark:bg-zinc-900/30" : "bg-white dark:bg-zinc-950"}`}>
+                                    <div className="flex items-center gap-4 mb-4 md:mb-0">
+                                        <div className="w-24">
+                                            <span className={`font-bold ${dayConfig.isClosed ? "text-zinc-400" : "text-zinc-900 dark:text-zinc-100"}`}>
+                                                {label}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Switch
+                                                size="sm"
+                                                checked={!dayConfig.isClosed}
+                                                onCheckedChange={(checked) => handleDayChange(key, 'isClosed', !checked)}
+                                            />
+                                            <span className="text-xs font-medium text-zinc-500">
+                                                {dayConfig.isClosed ? "Kapalı" : "Açık"}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {!dayConfig.isClosed && (
+                                        <div className="flex items-center gap-3 animate-in fade-in slide-in-from-right-2 duration-300">
+                                            <div className="relative">
+                                                <Input
+                                                    type="time"
+                                                    value={dayConfig.open}
+                                                    onChange={(e) => handleDayChange(key, 'open', e.target.value)}
+                                                    className="w-32 h-10 bg-zinc-50 dark:bg-zinc-900 border-none font-medium"
+                                                />
+                                            </div>
+                                            <span className="text-zinc-400 font-bold">—</span>
+                                            <div className="relative">
+                                                <Input
+                                                    type="time"
+                                                    value={dayConfig.close}
+                                                    onChange={(e) => handleDayChange(key, 'close', e.target.value)}
+                                                    className="w-32 h-10 bg-zinc-50 dark:bg-zinc-900 border-none font-medium"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {dayConfig.isClosed && (
+                                        <div className="bg-zinc-100 dark:bg-zinc-800/50 px-4 py-2 rounded-xl text-xs font-bold text-zinc-400 uppercase tracking-widest md:w-[285px] text-center">
+                                            Tüm Gün Kapalı
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </CardContent>
+            </Card>
+
             {/* ── Sipariş & İletişim ─────────────────────────────────────────── */}
             <Card className="dark:border-zinc-800 dark:bg-zinc-950">
                 <CardHeader>
@@ -212,16 +336,7 @@ export default function AdminSettingsPage() {
                         <Input id="whatsappNumber" name="whatsappNumber" type="tel" value={formData.whatsappNumber} onChange={handleChange} placeholder="Örn: 905551234567" />
                         <p className="text-xs text-zinc-400">Uluslararası kod ile birlikte (örn: 90) giriniz.</p>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="openTime">Açılış Saati</Label>
-                            <Input id="openTime" name="openTime" type="time" value={formData.openTime} onChange={handleChange} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="closeTime">Kapanış Saati</Label>
-                            <Input id="closeTime" name="closeTime" type="time" value={formData.closeTime} onChange={handleChange} />
-                        </div>
-                    </div>
+                    {/* Old simple time inputs removed as we now have weekly schedule */}
                     <div className="space-y-2">
                         <Label htmlFor="minOrderAmount">Minimum Paket Tutarı (TL)</Label>
                         <Input id="minOrderAmount" name="minOrderAmount" type="number" value={formData.minOrderAmount} onChange={handleChange} />

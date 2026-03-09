@@ -191,6 +191,16 @@ export const mockRestaurant: Restaurant = {
         open: '10:00',
         close: '22:00',
         isOpenNow: true,
+        isManualClosed: false,
+        days: {
+            'pazartesi': { open: '10:00', close: '22:00', isClosed: false },
+            'sali': { open: '10:00', close: '22:00', isClosed: false },
+            'carsamba': { open: '10:00', close: '22:00', isClosed: false },
+            'persembe': { open: '10:00', close: '22:00', isClosed: false },
+            'cuma': { open: '10:00', close: '22:00', isClosed: false },
+            'cumartesi': { open: '10:00', close: '22:00', isClosed: false },
+            'pazar': { open: '10:00', close: '22:00', isClosed: false },
+        }
     },
     categories: mockCategories,
     products: mockProducts,

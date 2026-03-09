@@ -7,7 +7,7 @@ import StorefrontHeader from "./storefront-header";
 import ProductCard from "./product-card";
 import CartDrawer from "./cart-drawer";
 import ProductVariationModal from "./product-variation-modal";
-import { Search, LayoutGrid } from "lucide-react";
+import { Search, LayoutGrid, Clock } from "lucide-react";
 
 export type CartItem = {
     id: string;
@@ -22,6 +22,8 @@ export type CartItem = {
     }[];
     totalPrice: number;
 };
+
+import { isRestaurantOpen, getNextOpeningTime } from "@/lib/restaurant-utils";
 
 export default function StorefrontClient({
     // Keep props signature for backwards compatibility but we will ignore them
@@ -41,7 +43,10 @@ export default function StorefrontClient({
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
 
+    const isOpen = isRestaurantOpen(restaurant);
+
     const handleAddToCart = (item: CartItem) => {
+        if (!isOpen) return;
         setCart((prev) => [...prev, item]);
         setSelectedProduct(null);
     };
@@ -51,6 +56,7 @@ export default function StorefrontClient({
     };
 
     const selectProductToOrder = (product: Product) => {
+        if (!isOpen) return;
         if (product.variations && product.variations.length > 0) {
             setSelectedProduct(product);
         } else {
@@ -75,7 +81,37 @@ export default function StorefrontClient({
     const selectedCategoryName = categories.find((c) => c.id === selectedCategory)?.name;
 
     return (
-        <div className="min-h-screen bg-gray-50/80 pb-28 sm:pb-20">
+        <div className="min-h-screen bg-gray-50/80 pb-28 sm:pb-20 relative">
+            {!isOpen && (
+                <div className="fixed inset-0 z-[100] bg-white/60 backdrop-blur-[2px] flex items-center justify-center p-6 sm:p-12">
+                    <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 p-8 max-w-md w-full text-center space-y-6 animate-in zoom-in-95 duration-300">
+                        <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                            <Clock className="w-10 h-10" />
+                        </div>
+                        <div className="space-y-2">
+                            <h2 className="text-2xl font-black text-gray-900 leading-tight">Şu An Hizmet Vermiyoruz</h2>
+                            <p className="text-gray-500 font-medium">
+                                Restoranımız şu anda kapalıdır. Lütfen çalışma saatleri içerisinde tekrar deneyin.
+                            </p>
+                        </div>
+                        <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                            <span className="text-sm font-bold text-primary block uppercase tracking-wider mb-1">Açılış Zamanı</span>
+                            <span className="text-lg font-black text-gray-900">{getNextOpeningTime(restaurant)}</span>
+                        </div>
+                        <p className="text-xs text-gray-400 font-medium">Menüyü incelemeye devam edebilirsiniz ancak sipariş veremezsiniz.</p>
+                        <button
+                            onClick={(e) => {
+                                const target = e.currentTarget.parentElement?.parentElement;
+                                if (target) target.classList.add('hidden');
+                            }}
+                            className="w-full bg-gray-900 text-white font-bold py-4 rounded-2xl hover:bg-gray-800 transition-colors shadow-lg active:scale-[0.98]"
+                        >
+                            Menüye Göz At
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <StorefrontHeader restaurant={restaurant} />
 
             {/* Sticky Category Navigation */}
@@ -103,7 +139,7 @@ export default function StorefrontClient({
             </div>
 
             {/* Content */}
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8">
+            <div className={`max-w-5xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8 transition-opacity duration-500 ${!isOpen ? "opacity-50 pointer-events-none grayscale-[0.5]" : ""}`}>
                 {/* Section header with search */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                     <div className="flex items-center gap-3">

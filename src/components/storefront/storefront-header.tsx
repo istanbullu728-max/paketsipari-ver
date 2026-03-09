@@ -4,8 +4,16 @@ import { Badge } from "@/components/ui/badge";
 import { RestaurantLogo } from "@/components/restaurant-logo";
 
 
+import { isRestaurantOpen } from "@/lib/restaurant-utils";
+
 export default function StorefrontHeader({ restaurant }: { restaurant: Restaurant }) {
     const initials = restaurant.name.substring(0, 2).toUpperCase();
+    const isOpen = isRestaurantOpen(restaurant);
+
+    const now = new Date();
+    const dayNames = ['pazar', 'pazartesi', 'sali', 'carsamba', 'persembe', 'cuma', 'cumartesi'];
+    const todayKey = dayNames[now.getDay()];
+    const todaySchedule = restaurant.businessHours.days[todayKey];
 
     return (
         <header className="relative bg-white overflow-hidden">
@@ -64,15 +72,15 @@ export default function StorefrontHeader({ restaurant }: { restaurant: Restauran
                                     </span>
 
                                     {/* Open status */}
-                                    <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg border ${restaurant.businessHours.isOpenNow
+                                    <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg border ${isOpen
                                         ? "bg-emerald-50 border-emerald-200 text-emerald-700"
                                         : "bg-red-50 border-red-200 text-red-600"
                                         }`}>
-                                        <span className={`w-2 h-2 rounded-full ${restaurant.businessHours.isOpenNow ? "bg-emerald-500 animate-pulse" : "bg-red-400"
+                                        <span className={`w-2 h-2 rounded-full ${isOpen ? "bg-emerald-500 animate-pulse" : "bg-red-400"
                                             }`} />
-                                        {restaurant.businessHours.isOpenNow ? "Açık" : "Kapalı"}
+                                        {isOpen ? "Açık" : "Kapalı"}
                                         <span className="font-normal opacity-70 ml-0.5">
-                                            {restaurant.businessHours.open}–{restaurant.businessHours.close}
+                                            {todaySchedule.isClosed ? "Tüm Gün Kapalı" : `${todaySchedule.open}–${todaySchedule.close}`}
                                         </span>
                                     </span>
 

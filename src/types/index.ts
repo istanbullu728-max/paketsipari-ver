@@ -9,6 +9,14 @@ export interface Restaurant {
     open: string;
     close: string;
     isOpenNow: boolean;
+    isManualClosed: boolean;
+    days: {
+      [key: string]: {
+        open: string;
+        close: string;
+        isClosed: boolean;
+      };
+    };
   };
   categories: Category[];
   products: Product[];
