@@ -206,6 +206,10 @@ export default function AdminMenuPage() {
         setIsSearching(true);
         setSearchResults([]); // clear while searching
 
+        let searchTerm = cleanQuery.toLowerCase();
+
+        // Try to do everything outside the big try/catch if it doesnt throw, or just put everything in try catch.
+        // Actually, the try is at line 209:
         try {
             // Unsplash Source provides better direct matching for food items than raw Pixabay without translation
             // Since it's a mock, we can generate multiple unqiue predictable unsplash source URLs so it looks like a gallery
@@ -258,26 +262,39 @@ export default function AdminMenuPage() {
                 if (data.hits && data.hits.length > 0) {
                     setSearchResults(data.hits.map((hit: any) => hit.webformatURL));
                 } else {
-                    // Fallback to static direct Unsplash images if no results
-                    setSearchResults([
-                        "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80",
-                        "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&q=80",
-                        "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80",
-                        "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80",
-                        "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=800&q=80",
-                        "https://images.unsplash.com/photo-1554502078-ef0df4ae3562?w=800&q=80"
-                    ]);
+                    throw new Error("Görsel bulunamadı");
                 }
             } else {
-                throw new Error("API failed");
+                throw new Error("Arama motoruna bağlanılamadı");
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Image search error:", error);
-            // Fallback
+            // Sadece hata alırsak veya sonuç bulamazsak Pixabay yerine Wikimedia API'yi deneyelim (Ücretsiz, anahtarsız ve çalışır)
+            try {
+                const searchStr = cleanQuery;
+                const wikiRes = await fetch(`https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(searchStr)}&gsrnamespace=6&gsrlimit=12&prop=imageinfo&iiprop=url&format=json&origin=*`);
+                const wikiData = await wikiRes.json();
+                
+                if (wikiData.query && wikiData.query.pages) {
+                    const pages = Object.values(wikiData.query.pages) as any[];
+                    const urls = pages.map(p => p.imageinfo?.[0]?.url).filter(Boolean);
+                    if (urls.length > 0) {
+                         setSearchResults(urls);
+                         return; // Wikimedia başarılı oldu, çıkış yap
+                    }
+                }
+            } catch (wikiErr) {
+                console.error("Wikimedia da hata verdi", wikiErr);
+            }
+            
+            // Eğer her iki API de tam başarısız olursa mecburi Unsplash kaynak
             setSearchResults([
-                "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80",
-                "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&q=80",
-                "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80"
+                `https://source.unsplash.com/800x800/?${encodeURIComponent(cleanQuery)},food,1`,
+                `https://source.unsplash.com/800x800/?${encodeURIComponent(cleanQuery)},food,2`,
+                `https://source.unsplash.com/800x800/?${encodeURIComponent(cleanQuery)},food,3`,
+                `https://source.unsplash.com/800x800/?${encodeURIComponent(cleanQuery)},food,4`,
+                `https://source.unsplash.com/800x800/?${encodeURIComponent(cleanQuery)},food,5`,
+                `https://source.unsplash.com/800x800/?${encodeURIComponent(cleanQuery)},food,6`
             ]);
         } finally {
             setIsSearching(false);
