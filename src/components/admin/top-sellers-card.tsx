@@ -22,14 +22,7 @@ export default function TopSellersCard() {
 
     const maxCount = sorted[0]?.[1] || 1;
 
-    // Fallback mock data when no orders yet
-    const displayItems = sorted.length > 0 ? sorted : [
-        ["Adana Dürüm", 34],
-        ["Urfa Porsiyon", 28],
-        ["Lahmacun (5'li)", 22],
-        ["Ayran (Büyük)", 19],
-        ["Kutu Kola", 14],
-    ] as [string, number][];
+    const displayItems = sorted as [string, number][];
 
     const displayMax = (displayItems[0]?.[1] as number) || 1;
 

@@ -42,50 +42,7 @@ interface OrderContextType {
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
 
 export function OrderProvider({ children }: { children: ReactNode }) {
-    const [orders, setOrders] = useState<Order[]>([
-        {
-            id: "ORD-1234",
-            customerName: "Ahmet Yılmaz",
-            customerPhone: "05551234567",
-            customerAddress: "Örnek Mah. Test Sok. No:1 Kat:2",
-            customerNote: "Kapıyı çalmayın, bebek uyuyor.",
-            items: [
-                { id: "1", productName: "Adana Dürüm", quantity: 2, price: 120, options: ["Bol Acılı", "Lavaş"] },
-                { id: "2", productName: "Ayran", quantity: 2, price: 15, options: ["Büyük"] }
-            ],
-            totalAmount: 270,
-            status: "pending",
-            createdAt: new Date(Date.now() - 1000 * 60 * 5), // 5 mins ago
-            updatedAt: new Date(Date.now() - 1000 * 60 * 5)
-        },
-        {
-            id: "ORD-1235",
-            customerName: "Ayşe Demir",
-            customerPhone: "05329876543",
-            customerAddress: "Merkez Mah. Atatürk Cad. No:45",
-            items: [
-                { id: "3", productName: "Urfa Porsiyon", quantity: 1, price: 180, options: ["Bulgur Pilavı"] }
-            ],
-            totalAmount: 180,
-            status: "preparing",
-            createdAt: new Date(Date.now() - 1000 * 60 * 20), // 20 mins ago
-            updatedAt: new Date(Date.now() - 1000 * 60 * 15)
-        },
-        {
-            id: "ORD-1236",
-            customerName: "Mehmet Kaya",
-            customerPhone: "05051112233",
-            customerAddress: "Yeni Mah. Pazar Sok. No:12 Kat:4",
-            items: [
-                { id: "4", productName: "Lahmacun", quantity: 5, price: 40, options: ["Acılı"] },
-                { id: "5", productName: "Kola", quantity: 1, price: 30, options: [] }
-            ],
-            totalAmount: 230,
-            status: "delivering",
-            createdAt: new Date(Date.now() - 1000 * 60 * 45), // 45 mins ago
-            updatedAt: new Date(Date.now() - 1000 * 60 * 10)
-        }
-    ]);
+    const [orders, setOrders] = useState<Order[]>([]);
 
     const addOrder = (orderData: Omit<Order, "id" | "status" | "createdAt">) => {
         const newOrder: Order = {
@@ -118,7 +75,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
             todayRevenue: todayOrders.reduce((sum, o) => sum + o.totalAmount, 0),
             pendingCount: orders.filter(o => o.status === "pending" || o.status === "preparing").length,
             completedCount: orders.filter(o => o.status === "completed").length,
-            activeVisitors: Math.floor(Math.random() * 40) + 10 // Mock active visitors between 10-50
+            activeVisitors: 0
         };
     };
 

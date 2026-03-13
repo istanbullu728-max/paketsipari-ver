@@ -22,12 +22,7 @@ export default function LoyalCustomersCard() {
         .sort((a, b) => b.count - a.count)
         .slice(0, 3);
 
-    // Fallback mock
-    const displayCustomers = topCustomers.length > 0 ? topCustomers : [
-        { name: "Ahmet Yılmaz", phone: "05551234567", count: 4 },
-        { name: "Ayşe Demir", phone: "05329876543", count: 3 },
-        { name: "Mehmet Kaya", phone: "05051112233", count: 2 },
-    ];
+    const displayCustomers = topCustomers;
 
     const openWhatsApp = (phone: string, name: string) => {
         const cleanPhone = phone.replace(/[^0-9]/g, "");

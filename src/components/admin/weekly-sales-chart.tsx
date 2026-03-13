@@ -12,22 +12,7 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { TrendingUp } from "lucide-react";
-
-const generateWeeklyData = () => {
-    const days = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
-    const today = new Date();
-    return days.map((day, i) => {
-        const seed = (today.getDay() + i) % 7;
-        // Weekends have higher sales
-        const multiplier = seed >= 5 ? 1.5 : 1;
-        const orders = Math.floor((10 + Math.random() * 20) * multiplier);
-        const revenue = orders * (120 + Math.floor(Math.random() * 80));
-        return { day, sipariş: orders, ciro: revenue };
-    });
-};
-
-const weeklyData = generateWeeklyData();
-
+import { useOrders } from "@/components/order-provider";
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
         return (
@@ -45,6 +30,29 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export default function WeeklySalesChart() {
+    const { orders } = useOrders();
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const weeklyData = Array.from({ length: 7 }).map((_, i) => {
+        const d = new Date(today);
+        d.setDate(d.getDate() - (6 - i));
+        
+        const dayOrders = orders.filter(o => 
+            o.createdAt.getDate() === d.getDate() && 
+            o.createdAt.getMonth() === d.getMonth() && 
+            o.createdAt.getFullYear() === d.getFullYear()
+        );
+
+        const ordersCount = dayOrders.length;
+        const revenue = dayOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+
+        const dayName = new Intl.DateTimeFormat('tr-TR', { weekday: 'short' }).format(d);
+        const formattedDayName = dayName.charAt(0).toUpperCase() + dayName.slice(1);
+
+        return { day: formattedDayName, sipariş: ordersCount, ciro: revenue };
+    });
     const totalRevenue = weeklyData.reduce((sum, d) => sum + d.ciro, 0);
     const totalOrders = weeklyData.reduce((sum, d) => sum + d.sipariş, 0);
 
