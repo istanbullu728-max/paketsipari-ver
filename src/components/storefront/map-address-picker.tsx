@@ -33,7 +33,7 @@ async function forwardGeocode(query: string): Promise<{ lat: number; lng: number
             }
             
             const res = await fetch(
-                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cleanQuery)}&format=json&limit=1`,
+                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cleanQuery)}&format=json&limit=1&countrycodes=tr`,
                 { headers: { "Accept-Language": "tr" } }
             );
             const results = await res.json();

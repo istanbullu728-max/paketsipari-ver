@@ -204,30 +204,30 @@ export default function AdminMenuPage() {
         if (!cleanQuery) return;
 
         setIsSearching(true);
-        // Do not clear searchResults immediately to avoid flicker, let's clear them after a short delay if it's taking too long
-        // or just rely on the new results replacing them.
+        const currentSearchId = Date.now();
+        (window as any)._lastSearchId = currentSearchId;
 
         let searchTerm = cleanQuery.toLowerCase();
         let matched = false;
 
         const engQueryMap: Record<string, string> = {
-            "sufle": "chocolate souffle dessert",
-            "adana": "adana kebab meat",
+            "sufle": "souffle chocolate dessert",
+            "adana": "adana kebab",
             "kebap": "turkish kebab",
             "döner": "doner kebab meat",
             "dürüm": "turkish wrap",
-            "ayran": "ayran drink",
-            "kola": "coca cola bottle",
-            "lahmacun": "turkish pizza lahmacun",
-            "pide": "turkish pide bread",
-            "tatlı": "turkish dessert",
-            "künefe": "kunefe dessert",
-            "çorba": "turkish soup",
-            "pilav": "turkish rice",
-            "tavuk": "grilled chicken",
-            "köfte": "turkish meatballs",
-            "pizza": "italian pizza",
-            "burger": "juicy hamburger",
+            "ayran": "yogurt drink",
+            "kola": "coca cola",
+            "lahmacun": "turkish pizza",
+            "pide": "turkish pide",
+            "tatlı": "dessert",
+            "künefe": "kunefe",
+            "çorba": "soup",
+            "pilav": "rice bowl",
+            "tavuk": "chicken dish",
+            "köfte": "meatballs",
+            "pizza": "pizza",
+            "burger": "hamburger",
             "hamburger": "hamburger"
         };
 
@@ -240,31 +240,17 @@ export default function AdminMenuPage() {
         }
         
         if (!matched && !searchTerm.includes("su") && !searchTerm.includes("içecek")) {
-             searchTerm = `${searchTerm} food dish`;
+             searchTerm = `${searchTerm} food`;
         }
 
         try {
-            // Pixabay is often slow or CORS restricted. Let's try to get high-quality Unsplash-like results directly.
-            // Since we want "Google Images" vibe, let's use Unsplash Source which is actually very fast and high quality for food.
-            // We'll generate 12 unique images by using different seeds and keywords.
-            
-            const results = [];
-            for (let i = 1; i <= 9; i++) {
-                // We use images.unsplash.com which is the modern way to get high-res photos
-                // We append a random seed to avoid browser caching the same image for different results
-                results.push(`https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop&q=60&sig=${i}&food=${encodeURIComponent(searchTerm)}`);
-            }
-            
-            // To make it look real and "not stuck", we'll use a small timeout to simulate search
-            await new Promise(resolve => setTimeout(resolve, 800));
-
-            // Actually, let's try a REAL fetch to Unsplash (public API doesn't need key for some things or we can use a proxy)
-            // But for now, let's optimize the Pixabay call as it's the only one with a real API key provided.
             const apiKey = "48154694-358043b2f211516f4c4a4f895";
             const res = await fetch(`https://pixabay.com/api/?key=${apiKey}&q=${encodeURIComponent(searchTerm)}&image_type=photo&category=food&per_page=12&safesearch=true`);
             
             if (res.ok) {
                 const data = await res.json();
+                if ((window as any)._lastSearchId !== currentSearchId) return;
+
                 if (data.hits && data.hits.length > 0) {
                     setSearchResults(data.hits.map((h: any) => h.webformatURL));
                 } else {
@@ -274,22 +260,20 @@ export default function AdminMenuPage() {
                 throw new Error("API error");
             }
         } catch (error) {
-            console.error("Image search error:", error);
-            // Fallback to high-quality Unsplash-style food images if API fails
-            const fallbackResults = [
-                "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80", // Salad
-                "https://images.unsplash.com/photo-1567620905732-2d1ec7bb7445?w=800&q=80", // Pancakes
-                "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80", // Pizza
-                "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80", // Meat
-                "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=800&q=80", // Salad 2
-                "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&q=80", // Burger
-                "https://images.unsplash.com/photo-1512152272829-e3139592d56f?w=800&q=80", // Fries
-                "https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=800&q=80", // Meat 2
-                "https://images.unsplash.com/photo-1473093226795-af9932fe5856?w=800&q=80"  // Pasta
-            ];
+            console.error("Image search error, falling back to dynamic service:", error);
+            if ((window as any)._lastSearchId !== currentSearchId) return;
+
+            // DYNAMIC FALLBACK: Use LoremFlickr which is extremely reliable and keyless
+            const fallbackResults = [];
+            const tags = searchTerm.replace(/\s+/g, ',');
+            for (let i = 1; i <= 9; i++) {
+                fallbackResults.push(`https://loremflickr.com/800/600/${tags}?lock=${i}`);
+            }
             setSearchResults(fallbackResults);
         } finally {
-            setIsSearching(false);
+            if ((window as any)._lastSearchId === currentSearchId) {
+                setIsSearching(false);
+            }
         }
     };
 
