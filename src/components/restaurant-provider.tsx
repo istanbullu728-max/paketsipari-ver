@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { mockRestaurant } from "@/lib/mock-data";
 import { Restaurant } from "@/types";
 
@@ -20,10 +20,37 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
     const [restaurantData, setRestaurantData] = useState<Restaurant>(mockRestaurant);
     // draft data for admin panel
     const [draftData, setDraftData] = useState<Restaurant>(mockRestaurant);
+    const [isLoaded, setIsLoaded] = useState(false);
+
+    // 1. Initial Load from LocalStorage
+    useEffect(() => {
+        try {
+            const savedPublished = localStorage.getItem("restaurantData_live");
+            const savedDraft = localStorage.getItem("restaurantData_draft");
+            
+            if (savedPublished) {
+                setRestaurantData(JSON.parse(savedPublished));
+            }
+            if (savedDraft) {
+                setDraftData(JSON.parse(savedDraft));
+            }
+        } catch (e) {
+            console.error("Failed to load from storage", e);
+        }
+        setIsLoaded(true);
+    }, []);
+
+    // 2. Auto-save draft changes
+    useEffect(() => {
+        if (!isLoaded) return;
+        localStorage.setItem("restaurantData_draft", JSON.stringify(draftData));
+    }, [draftData, isLoaded]);
 
     const updateRestaurantData = (newData: Partial<Restaurant>) => {
-        setRestaurantData((prev) => ({ ...prev, ...newData }));
+        const updated = { ...restaurantData, ...newData };
+        setRestaurantData(updated);
         setDraftData((prev) => ({ ...prev, ...newData })); // Keep global settings synced
+        localStorage.setItem("restaurantData_live", JSON.stringify(updated));
     };
 
     const updateDraftData = (newData: Partial<Restaurant>) => {
@@ -32,11 +59,13 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
 
     const publishDraft = () => {
         // Copies all draft categories and products straight to the live restaurantData
-        setRestaurantData(prev => ({
-            ...prev,
+        const newLive = {
+            ...restaurantData,
             categories: [...draftData.categories],
             products: [...draftData.products]
-        }));
+        };
+        setRestaurantData(newLive);
+        localStorage.setItem("restaurantData_live", JSON.stringify(newLive));
     };
 
     return (

@@ -27,17 +27,29 @@ async function forwardGeocode(query: string): Promise<{ lat: number; lng: number
             let cleanQuery = q.replace(/\n/g, ", ").trim();
             if (!cleanQuery) return null;
             
-            // Append Turkey to stay in context
+            // Append Turkey if not present
             if (!cleanQuery.toLowerCase().includes("türkiye") && !cleanQuery.toLowerCase().includes("turkey")) {
                 cleanQuery += ", Türkiye";
             }
             
+            // Limit increased to 3 to help us pick the best match
             const res = await fetch(
-                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cleanQuery)}&format=json&limit=1&countrycodes=tr`,
+                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cleanQuery)}&format=json&limit=3&countrycodes=tr`,
                 { headers: { "Accept-Language": "tr" } }
             );
             const results = await res.json();
+            
             if (results && results.length > 0) {
+                // If user mentioned "İzmir", prioritize a result that has "İzmir" in its name
+                const isIzmirSearch = q.toLowerCase().includes("izmir");
+                if (isIzmirSearch) {
+                    const izmirMatch = results.find((r: any) => 
+                        r.display_name.toLowerCase().includes("izmir")
+                    );
+                    if (izmirMatch) return { lat: parseFloat(izmirMatch.lat), lng: parseFloat(izmirMatch.lon) };
+                }
+                
+                // Otherwise just return the first one (most relevant)
                 return { lat: parseFloat(results[0].lat), lng: parseFloat(results[0].lon) };
             }
             return null;
@@ -50,7 +62,14 @@ async function forwardGeocode(query: string): Promise<{ lat: number; lng: number
     let result = await trySearch(query);
     if (result) return result;
 
-    // 2. If fails, try stripping specific details like "No:", "Kapı", "Daire" which Nominatim hates
+    // 2. If it fails and it doesn't mention a city, it might be an Izmir address (based on user's current context)
+    // We try appending "İzmir" to see if it helps.
+    if (!query.toLowerCase().includes("izmir") && !query.toLowerCase().includes("istanbul") && !query.toLowerCase().includes("ankara")) {
+         result = await trySearch(query + ", İzmir");
+         if (result) return result;
+    }
+
+    // 3. Try stripping specifics
     const simplified = query
         .replace(/(No|Kapi|Daire|Kat|Blok|Sitesi|Apartmani|Apt|P\.\s*K).*$/gi, '')
         .trim();
@@ -60,7 +79,7 @@ async function forwardGeocode(query: string): Promise<{ lat: number; lng: number
         if (result) return result;
     }
 
-    // 3. Last resort: try just the first 3-4 words (usually Neighborhood/Street)
+    // 4. Words split
     const words = query.split(/[\s,]+/).filter(w => w.length > 2);
     if (words.length > 3) {
         result = await trySearch(words.slice(0, 4).join(" "));
