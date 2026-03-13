@@ -213,34 +213,45 @@ export default function AdminMenuPage() {
             // We use a combination of query and random seeds to get different pictures of the same dish.
 
             const engQueryMap: Record<string, string> = {
-                "sufle": "souffle dessert",
-                "adana": "kebab",
-                "kebap": "kebab meat",
-                "döner": "doner kebab meat",
+                "sufle": "chocolate souffle",
+                "adana": "kebab meat",
+                "kebap": "kebab",
+                "döner": "doner meat",
                 "dürüm": "wrap sandwich",
                 "ayran": "yogurt drink",
-                "kola": "cola drink",
-                "lahmacun": "lahmacun pizza",
-                "pide": "pita bread food",
+                "kola": "cola bottle",
+                "lahmacun": "turkish pizza",
+                "pide": "pita bread",
                 "tatlı": "dessert",
-                "künefe": "kunefe dessert",
-                "çorba": "soup bowl",
+                "künefe": "kunefe",
+                "çorba": "soup",
                 "pilav": "rice bowl",
+                "tavuk": "chicken dish",
+                "köfte": "meatballs",
+                "pizza": "pizza",
+                "burger": "hamburger",
+                "hamburger": "hamburger"
             };
 
-            // Try to map common turkish terms to english for better results, else use base query
+            // Try to map common turkish terms to english for better results
             let searchTerm = cleanQuery.toLowerCase();
+            let matched = false;
+            
             for (const [tr, en] of Object.entries(engQueryMap)) {
-                if (searchTerm.includes(tr)) {
+                if (searchTerm.includes(tr) || tr.includes(searchTerm)) {
                     searchTerm = en;
+                    matched = true;
                     break;
                 }
             }
+            
+            // If it didn't match our hardcoded list, append "food" or "dish" to guide Pixabay, but only if it's not a drink
+            if (!matched && !searchTerm.includes("su") && !searchTerm.includes("içecek") && !searchTerm.includes("soda")) {
+                 searchTerm = `${searchTerm} food`;
+            }
 
-            // source.unsplash.com is deprecated and returning 404s/broken images.
-            // We'll use a reliable fallback service or direct query approach using Pixabay API again since we have a key.
             const apiKey = "48154694-358043b2f211516f4c4a4f895";
-            const res = await fetch(`https://pixabay.com/api/?key=${apiKey}&q=${encodeURIComponent(searchTerm)}&image_type=photo&per_page=12&orientation=horizontal&safesearch=true`);
+            const res = await fetch(`https://pixabay.com/api/?key=${apiKey}&q=${encodeURIComponent(searchTerm)}&image_type=photo&category=food&per_page=12&orientation=horizontal&safesearch=true`);
 
             if (res.ok) {
                 const data = await res.json();
