@@ -138,7 +138,29 @@ export default function CheckoutDialog({
 
                     {/* Address */}
                     <div className="space-y-1.5">
-                        <Label htmlFor="address" className="text-sm font-medium">Teslimat Adresi</Label>
+                        <div className="flex justify-between items-center">
+                            <Label htmlFor="address" className="text-sm font-medium">Teslimat Adresi</Label>
+                            {formData.address.length >= 5 && (
+                                <button 
+                                    type="button"
+                                    onClick={() => {
+                                        // Update state to trigger useEffect in MapAddressPicker
+                                        // We just re-set it to itself but we might need a way to force it.
+                                        // The MapAddressPicker debounces anyway.
+                                        const current = formData.address;
+                                        setFormData(prev => ({ ...prev, address: current + " " }));
+                                        setTimeout(() => setFormData(prev => ({ ...prev, address: current })), 50);
+                                    }}
+                                    className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-full transition-colors"
+                                >
+                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    Konumu Haritada Bul
+                                </button>
+                            )}
+                        </div>
                         <Textarea
                             id="address" name="address" required
                             value={formData.address} onChange={handleChange}

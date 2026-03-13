@@ -22,21 +22,51 @@ async function reverseGeocode(lat: number, lng: number): Promise<string> {
 }
 
 async function forwardGeocode(query: string): Promise<{ lat: number; lng: number } | null> {
-    try {
-        let cleanQuery = query.replace(/\n/g, ", ");
-        if (!cleanQuery.toLowerCase().includes("türkiye") && !cleanQuery.toLowerCase().includes("turkey")) {
-            cleanQuery += ", Türkiye";
+    const trySearch = async (q: string) => {
+        try {
+            let cleanQuery = q.replace(/\n/g, ", ").trim();
+            if (!cleanQuery) return null;
+            
+            // Append Turkey to stay in context
+            if (!cleanQuery.toLowerCase().includes("türkiye") && !cleanQuery.toLowerCase().includes("turkey")) {
+                cleanQuery += ", Türkiye";
+            }
+            
+            const res = await fetch(
+                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cleanQuery)}&format=json&limit=1`,
+                { headers: { "Accept-Language": "tr" } }
+            );
+            const results = await res.json();
+            if (results && results.length > 0) {
+                return { lat: parseFloat(results[0].lat), lng: parseFloat(results[0].lon) };
+            }
+            return null;
+        } catch {
+            return null;
         }
-        const res = await fetch(
-            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cleanQuery)}&format=json&limit=1`,
-            { headers: { "Accept-Language": "tr" } }
-        );
-        const results = await res.json();
-        if (!results.length) return null;
-        return { lat: parseFloat(results[0].lat), lng: parseFloat(results[0].lon) };
-    } catch {
-        return null;
+    };
+
+    // 1. Try full query
+    let result = await trySearch(query);
+    if (result) return result;
+
+    // 2. If fails, try stripping specific details like "No:", "Kapı", "Daire" which Nominatim hates
+    const simplified = query
+        .replace(/(No|Kapi|Daire|Kat|Blok|Sitesi|Apartmani|Apt|P\.\s*K).*$/gi, '')
+        .trim();
+    
+    if (simplified && simplified !== query) {
+        result = await trySearch(simplified);
+        if (result) return result;
     }
+
+    // 3. Last resort: try just the first 3-4 words (usually Neighborhood/Street)
+    const words = query.split(/[\s,]+/).filter(w => w.length > 2);
+    if (words.length > 3) {
+        result = await trySearch(words.slice(0, 4).join(" "));
+    }
+
+    return result;
 }
 
 export default function MapAddressPicker({ address, onChange }: Props) {
