@@ -23,8 +23,12 @@ async function reverseGeocode(lat: number, lng: number): Promise<string> {
 
 async function forwardGeocode(query: string): Promise<{ lat: number; lng: number } | null> {
     try {
+        let cleanQuery = query.replace(/\n/g, ", ");
+        if (!cleanQuery.toLowerCase().includes("türkiye") && !cleanQuery.toLowerCase().includes("turkey")) {
+            cleanQuery += ", Türkiye";
+        }
         const res = await fetch(
-            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`,
+            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cleanQuery)}&format=json&limit=1`,
             { headers: { "Accept-Language": "tr" } }
         );
         const results = await res.json();
@@ -136,21 +140,33 @@ export default function MapAddressPicker({ address, onChange }: Props) {
         // Debounce 900 ms, then wait for map to be ready before moving pin
         const timer = setTimeout(async () => {
             const snapshot = latestAddressRef.current;
+            
+            // Allow bypassing map ready promise if geocoding first, wait to move until map is there
+            try {
+                setLoading(true);
+                const result = await forwardGeocode(snapshot);
+                
+                await mapReadyPromise.current;
 
-            // Wait until Leaflet is fully initialised (instant if already done)
-            await mapReadyPromise.current;
+                if (!mapRef.current || !markerRef.current) return;
+                
+                // If the user continued typing, abort this outdated request
+                if (latestAddressRef.current !== snapshot) return;
 
-            // Bail if component unmounted or address changed while we waited
-            if (!mapRef.current || !markerRef.current) return;
-            if (latestAddressRef.current !== snapshot) return;
-
-            setLoading(true);
-            const result = await forwardGeocode(snapshot);
-            if (result && mapRef.current && markerRef.current) {
-                markerRef.current.setLatLng([result.lat, result.lng]);
-                mapRef.current.setView([result.lat, result.lng], 15, { animate: true });
+                if (result) {
+                    // Check if current pin is far from result to avoid loops
+                    const currentPos = markerRef.current.getLatLng();
+                    const distance = Math.pow(currentPos.lat - result.lat, 2) + Math.pow(currentPos.lng - result.lng, 2);
+                    if (distance > 0.000001) {
+                         markerRef.current.setLatLng([result.lat, result.lng]);
+                         mapRef.current.setView([result.lat, result.lng], 15, { animate: true });
+                    }
+                }
+            } catch (e) {
+                console.error("Geocoding failed", e);
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         }, 900);
 
         return () => clearTimeout(timer);
