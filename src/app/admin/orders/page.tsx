@@ -175,6 +175,7 @@ export default function AdminOrdersPage() {
         { key: "preparing", label: "Hazırlanıyor" },
         { key: "delivering", label: "Yolda" },
         { key: "completed", label: "Tamamlandı" },
+        { key: "cancelled", label: "İptal" },
     ];
 
     return (
@@ -331,6 +332,23 @@ export default function AdminOrdersPage() {
                                             >
                                                 <Star className="w-3.5 h-3.5" />
                                                 Yorum İste
+                                            </Button>
+                                        )}
+
+                                        {/* Cancel button — visible for active orders — small and discrete */}
+                                        {(order.status === "pending" || order.status === "preparing" || order.status === "delivering") && (
+                                            <Button
+                                                size="icon"
+                                                variant="ghost"
+                                                className="h-8 w-8 text-zinc-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 shrink-0 border border-transparent hover:border-red-100 dark:hover:border-red-500/20"
+                                                title="Siparişi İptal Et"
+                                                onClick={() => {
+                                                    if (window.confirm("Bu siparişi iptal etmek istediğinize emin misiniz?")) {
+                                                        handleAction(order, "cancel");
+                                                    }
+                                                }}
+                                            >
+                                                <XCircle className="w-4 h-4" />
                                             </Button>
                                         )}
 
@@ -510,6 +528,13 @@ export default function AdminOrdersPage() {
                                             <Button variant="outline" className="w-full gap-2" onClick={() => openWa(selectedOrder, "generic")}>
                                                 <MessageCircle className="w-4 h-4" /> WhatsApp'ta Görüş
                                             </Button>
+                                            <Button
+                                                variant="ghost"
+                                                className="w-full gap-2 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10 border border-red-100 dark:border-red-500/20"
+                                                onClick={() => { handleAction(selectedOrder, "cancel"); setSelectedOrder(null); }}
+                                            >
+                                                <XCircle className="w-4 h-4" /> Siparişi İptal Et
+                                            </Button>
                                         </>
                                     )}
 
@@ -524,6 +549,13 @@ export default function AdminOrdersPage() {
                                             </Button>
                                             <Button variant="outline" className="w-full gap-2" onClick={() => openWa(selectedOrder, "generic")}>
                                                 <MessageCircle className="w-4 h-4" /> WhatsApp'ta Görüş
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                className="w-full gap-2 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10 border border-red-100 dark:border-red-500/20"
+                                                onClick={() => { handleAction(selectedOrder, "cancel"); setSelectedOrder(null); }}
+                                            >
+                                                <XCircle className="w-4 h-4" /> Siparişi İptal Et
                                             </Button>
                                         </>
                                     )}

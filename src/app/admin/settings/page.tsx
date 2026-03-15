@@ -24,6 +24,8 @@ export default function AdminSettingsPage() {
     const { restaurantData, updateRestaurantData } = useRestaurant();
     const [formData, setFormData] = useState({
         name: restaurantData.name,
+        address: restaurantData.address || "",
+        description: restaurantData.description || "",
         whatsappNumber: restaurantData.whatsappNumber,
         minOrderAmount: restaurantData.minOrderAmount.toString(),
         openTime: restaurantData.businessHours.open,
@@ -40,6 +42,8 @@ export default function AdminSettingsPage() {
     useEffect(() => {
         setFormData({
             name: restaurantData.name,
+            address: restaurantData.address || "",
+            description: restaurantData.description || "",
             whatsappNumber: restaurantData.whatsappNumber,
             minOrderAmount: restaurantData.minOrderAmount.toString(),
             openTime: restaurantData.businessHours.open,
@@ -51,7 +55,7 @@ export default function AdminSettingsPage() {
         });
     }, [restaurantData]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
     };
 
@@ -94,6 +98,8 @@ export default function AdminSettingsPage() {
     const handleSave = () => {
         updateRestaurantData({
             name: formData.name,
+            address: formData.address,
+            description: formData.description,
             whatsappNumber: formData.whatsappNumber,
             minOrderAmount: parseFloat(formData.minOrderAmount) || 0,
             slug: formData.slug,
@@ -251,6 +257,22 @@ export default function AdminSettingsPage() {
                     <div className="space-y-2">
                         <Label htmlFor="name">Restoran Adı</Label>
                         <Input id="name" name="name" value={formData.name} onChange={handleChange} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="description">Kısa Açıklama (Opsiyonel)</Label>
+                        <Input id="description" name="description" value={formData.description} onChange={handleChange} placeholder="Örn: Kebap, Pide ve Izgara Çeşitleri" />
+                        <p className="text-[10px] text-zinc-500 italic">Müşterilere başlığın hemen altında gösterilir.</p>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="address">Restoran Adresi</Label>
+                        <textarea
+                            id="address"
+                            name="address"
+                            value={formData.address}
+                            onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-950 dark:border-zinc-800"
+                            placeholder="Örn: Atatürk Mah. 123. Sok. Merkez/İstanbul"
+                        />
                     </div>
                 </CardContent>
             </Card>

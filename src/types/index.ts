@@ -20,6 +20,8 @@ export interface Restaurant {
   };
   categories: Category[];
   products: Product[];
+  address?: string;
+  description?: string;
 }
 
 export interface Category {
@@ -32,14 +34,18 @@ export interface Category {
 export interface ProductVariationOption {
   id: string;
   name: string;
-  priceDelta: number; // e.g. +10 for large, 0 for small
+  price: number; // base price addition
+  orderIndex: number;
 }
 
 export interface ProductVariation {
   id: string;
-  name: string; // e.g., 'Porsiyon', 'Sos'
-  isRequired: boolean;
+  name: string; // Group title (e.g. "İçecek Seçimi")
+  type: "single" | "multiple";
+  min?: number;
+  max?: number;
   options: ProductVariationOption[];
+  orderIndex: number;
 }
 
 export interface Product {

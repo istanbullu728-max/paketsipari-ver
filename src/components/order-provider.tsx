@@ -35,6 +35,7 @@ interface OrderContextType {
         todayRevenue: number;
         pendingCount: number;
         completedCount: number;
+        cancelledCount: number;
         activeVisitors: number; // mock
     };
 }
@@ -72,9 +73,12 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         );
 
         return {
-            todayRevenue: todayOrders.reduce((sum, o) => sum + o.totalAmount, 0),
+            todayRevenue: todayOrders
+                .filter(o => o.status !== "cancelled")
+                .reduce((sum, o) => sum + o.totalAmount, 0),
             pendingCount: orders.filter(o => o.status === "pending" || o.status === "preparing").length,
             completedCount: orders.filter(o => o.status === "completed").length,
+            cancelledCount: orders.filter(o => o.status === "cancelled").length,
             activeVisitors: 0
         };
     };

@@ -8,8 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Edit, Trash2, Image as ImageIcon, Upload, X, Search, Rocket, CheckCircle2, ExternalLink, Copy, Globe } from "lucide-react";
+import { Plus, Edit, Trash2, Image as ImageIcon, Upload, X, Search, Rocket, CheckCircle2, ExternalLink, Copy, Globe, GripVertical, Settings2, ListPlus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Reorder, AnimatePresence, motion } from "framer-motion";
+import { ProductVariation, ProductVariationOption } from "@/types";
 
 export default function AdminMenuPage() {
     const { draftData, updateDraftData, publishDraft } = useRestaurant();
@@ -25,11 +27,18 @@ export default function AdminMenuPage() {
     // Product State
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [selectedCategoryId, setSelectedCategoryId] = useState<string>(draftData.categories[0]?.id || "");
-    const [productForm, setProductForm] = useState({
+    const [productForm, setProductForm] = useState<{
+        name: string;
+        description: string;
+        price: string;
+        imageUrl: string;
+        variations: ProductVariation[];
+    }>({
         name: "",
         description: "",
         price: "",
         imageUrl: "",
+        variations: [],
     });
 
     // Image upload state
@@ -136,7 +145,8 @@ export default function AdminMenuPage() {
                     name: productForm.name,
                     description: productForm.description,
                     price: parseFloat(productForm.price),
-                    imageUrl: productForm.imageUrl || undefined
+                    imageUrl: productForm.imageUrl || undefined,
+                    variations: productForm.variations
                 } : p
             );
         } else {
@@ -148,7 +158,7 @@ export default function AdminMenuPage() {
                 description: productForm.description,
                 price: parseFloat(productForm.price),
                 imageUrl: productForm.imageUrl || undefined,
-                variations: [],
+                variations: productForm.variations,
                 orderIndex: newProducts.length
             });
         }
@@ -156,7 +166,7 @@ export default function AdminMenuPage() {
         updateDraftData({ products: newProducts });
         setIsProductDialogOpen(false);
         setEditingProduct(null);
-        setProductForm({ name: "", description: "", price: "", imageUrl: "" });
+        setProductForm({ name: "", description: "", price: "", imageUrl: "", variations: [] });
         resetImageState();
     };
 
@@ -181,10 +191,81 @@ export default function AdminMenuPage() {
             name: product.name,
             description: product.description || "",
             price: product.price.toString(),
-            imageUrl: product.imageUrl || ""
+            imageUrl: product.imageUrl || "",
+            variations: product.variations || []
         });
         setSearchQuery(product.name);
         setIsProductDialogOpen(true);
+    };
+
+    const handleAddVariationGroup = () => {
+        const newGroup: ProductVariation = {
+            id: `var-${Date.now()}`,
+            name: "",
+            type: "single",
+            options: [],
+            orderIndex: productForm.variations.length
+        };
+        setProductForm(prev => ({ ...prev, variations: [...prev.variations, newGroup] }));
+    };
+
+    const handleUpdateVariationGroup = (groupId: string, updates: Partial<ProductVariation>) => {
+        setProductForm(prev => ({
+            ...prev,
+            variations: prev.variations.map(v => v.id === groupId ? { ...v, ...updates } : v)
+        }));
+    };
+
+    const handleRemoveVariationGroup = (groupId: string) => {
+        setProductForm(prev => ({
+            ...prev,
+            variations: prev.variations.filter(v => v.id !== groupId)
+        }));
+    };
+
+    const handleAddOption = (groupId: string) => {
+        setProductForm(prev => ({
+            ...prev,
+            variations: prev.variations.map(v => {
+                if (v.id === groupId) {
+                    const newOption: ProductVariationOption = {
+                        id: `opt-${Date.now()}`,
+                        name: "",
+                        price: 0,
+                        orderIndex: v.options.length
+                    };
+                    return { ...v, options: [...v.options, newOption] };
+                }
+                return v;
+            })
+        }));
+    };
+
+    const handleUpdateOption = (groupId: string, optionId: string, updates: Partial<ProductVariationOption>) => {
+        setProductForm(prev => ({
+            ...prev,
+            variations: prev.variations.map(v => {
+                if (v.id === groupId) {
+                    return {
+                        ...v,
+                        options: v.options.map(opt => opt.id === optionId ? { ...opt, ...updates } : opt)
+                    };
+                }
+                return v;
+            })
+        }));
+    };
+
+    const handleRemoveOption = (groupId: string, optionId: string) => {
+        setProductForm(prev => ({
+            ...prev,
+            variations: prev.variations.map(v => {
+                if (v.id === groupId) {
+                    return { ...v, options: v.options.filter(opt => opt.id !== optionId) };
+                }
+                return v;
+            })
+        }));
     };
 
     const handlePublish = async () => {
@@ -305,7 +386,7 @@ export default function AdminMenuPage() {
                     <Button variant="outline" onClick={() => { setEditingCategory(null); setCategoryName(""); setIsCategoryDialogOpen(true); }}>
                         <Plus className="w-4 h-4 mr-2" /> Kategori
                     </Button>
-                    <Button variant="outline" className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-900/30" onClick={() => { setEditingProduct(null); setProductForm({ name: "", description: "", price: "", imageUrl: "" }); setIsProductDialogOpen(true); }}>
+                    <Button variant="outline" className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-900/30" onClick={() => { setEditingProduct(null); setProductForm({ name: "", description: "", price: "", imageUrl: "", variations: [] }); setIsProductDialogOpen(true); }}>
                         <Plus className="w-4 h-4 mr-2" /> Ürün
                     </Button>
                     <Button
@@ -398,7 +479,7 @@ export default function AdminMenuPage() {
                             {draftData.products.filter(p => p.categoryId === selectedCategoryId).length === 0 && (
                                 <div className="col-span-full py-16 text-center border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl">
                                     <h3 className="text-zinc-500 font-medium">Bu kategoride henüz ürün yok</h3>
-                                    <Button variant="link" className="text-emerald-600 mt-2" onClick={() => { setEditingProduct(null); setProductForm({ name: "", description: "", price: "", imageUrl: "" }); setIsProductDialogOpen(true); }}>
+                                    <Button variant="link" className="text-emerald-600 mt-2" onClick={() => { setEditingProduct(null); setProductForm({ name: "", description: "", price: "", imageUrl: "", variations: [] }); setIsProductDialogOpen(true); }}>
                                         Hemen ilk ürünü ekleyin
                                     </Button>
                                 </div>
@@ -439,11 +520,11 @@ export default function AdminMenuPage() {
 
             {/* Product Dialog */}
             <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
-                <DialogContent className="max-w-md">
+                <DialogContent className="max-w-lg">
                     <DialogHeader>
                         <DialogTitle>{editingProduct ? "Ürünü Düzenle" : "Yeni Ürün Ekle"}</DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-4 py-4">
+                    <div className="space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-2 px-1">
                         <div className="space-y-2">
                             <Label htmlFor="prodName">Ürün Adı</Label>
                             <Input
@@ -465,7 +546,7 @@ export default function AdminMenuPage() {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="prodPrice">Fiyat (TL)</Label>
+                                <Label htmlFor="prodPrice">Taban Fiyat (TL)</Label>
                                 <Input
                                     id="prodPrice"
                                     type="number"
@@ -488,7 +569,139 @@ export default function AdminMenuPage() {
                                 </select>
                             </div>
                         </div>
-                        <div className="space-y-4 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+
+                        {/* --- VARIATION MANAGEMENT --- */}
+                        <div className="space-y-4 pt-6 border-t border-zinc-100 dark:border-zinc-800">
+                            <div className="flex items-center justify-between">
+                                <h4 className="text-sm font-bold flex items-center gap-2">
+                                    <Settings2 className="w-4 h-4 text-zinc-400" />
+                                    Varyasyon ve Seçenekler
+                                </h4>
+                                <Button 
+                                    type="button" 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="h-8 text-[11px] font-bold border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                                    onClick={handleAddVariationGroup}
+                                >
+                                    <ListPlus className="w-3.5 h-3.5 mr-1" />
+                                    Grup Ekle
+                                </Button>
+                            </div>
+
+                            <Reorder.Group axis="y" values={productForm.variations} onReorder={(newOrder) => setProductForm(prev => ({ ...prev, variations: newOrder }))} className="space-y-4">
+                                {productForm.variations.map((group) => (
+                                    <Reorder.Item key={group.id} value={group} className="bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-zinc-100 dark:border-zinc-800 p-4 relative group/var">
+                                        <div className="absolute top-4 left-2 cursor-grab active:cursor-grabbing text-zinc-300 opacity-0 group-hover/var:opacity-100 transition-opacity">
+                                            <GripVertical className="w-4 h-4" />
+                                        </div>
+                                        
+                                        <div className="pl-4 space-y-4">
+                                            <div className="flex gap-2 items-start">
+                                                <div className="flex-1 space-y-1.5">
+                                                    <Input
+                                                        placeholder="Grup Başlığı (Örn: Ekstralar)"
+                                                        value={group.name}
+                                                        onChange={(e) => handleUpdateVariationGroup(group.id, { name: e.target.value })}
+                                                        className="h-9 font-bold bg-white dark:bg-black border-transparent focus:border-zinc-200 dark:focus:border-zinc-700 px-0 shadow-none focus:px-3 transition-all"
+                                                    />
+                                                </div>
+                                                <Button size="icon" variant="ghost" className="h-8 w-8 text-zinc-400 hover:text-red-500" onClick={() => handleRemoveVariationGroup(group.id)}>
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                </Button>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-3 pb-2">
+                                                <div className="space-y-1">
+                                                    <Label className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Seçim Tipi</Label>
+                                                    <select
+                                                        className="w-full text-xs h-8 bg-white dark:bg-black rounded-md border border-zinc-200 dark:border-zinc-800 px-2"
+                                                        value={group.type}
+                                                        onChange={(e) => handleUpdateVariationGroup(group.id, { type: e.target.value as "single" | "multiple" })}
+                                                    >
+                                                        <option value="single">Tekli Seçim (Radio)</option>
+                                                        <option value="multiple">Çoklu Seçim (Checkbox)</option>
+                                                    </select>
+                                                </div>
+                                                {group.type === "multiple" && (
+                                                    <div className="flex gap-2">
+                                                        <div className="space-y-1 flex-1">
+                                                            <Label className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Min</Label>
+                                                            <Input
+                                                                type="number"
+                                                                className="h-8 text-xs px-2"
+                                                                value={group.min || ""}
+                                                                onChange={(e) => handleUpdateVariationGroup(group.id, { min: parseInt(e.target.value) || 0 })}
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1 flex-1">
+                                                            <Label className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Max</Label>
+                                                            <Input
+                                                                type="number"
+                                                                className="h-8 text-xs px-2"
+                                                                value={group.max || ""}
+                                                                onChange={(e) => handleUpdateVariationGroup(group.id, { max: parseInt(e.target.value) || 0 })}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Options List */}
+                                            <div className="space-y-2 border-t border-zinc-100 dark:border-zinc-800/50 pt-3">
+                                                <Reorder.Group axis="y" values={group.options} onReorder={(newOpts) => handleUpdateVariationGroup(group.id, { options: newOpts })} className="space-y-1.5">
+                                                    {group.options.map((opt) => (
+                                                        <Reorder.Item key={opt.id} value={opt} className="flex gap-2 items-center bg-white dark:bg-zinc-800/50 p-1.5 rounded-lg border border-zinc-100 dark:border-zinc-800 group/opt">
+                                                            <div className="cursor-grab text-zinc-300">
+                                                                <GripVertical className="w-3.5 h-3.5" />
+                                                            </div>
+                                                            <Input
+                                                                placeholder="Seçenek adı"
+                                                                className="h-8 text-xs border-none shadow-none focus:ring-1 focus:ring-emerald-500/20 px-1"
+                                                                value={opt.name}
+                                                                onChange={(e) => handleUpdateOption(group.id, opt.id, { name: e.target.value })}
+                                                            />
+                                                            <div className="flex items-center gap-1 shrink-0">
+                                                                <span className="text-[10px] text-zinc-400 font-bold">+</span>
+                                                                <Input
+                                                                    type="number"
+                                                                    className="h-8 w-16 text-xs border-none text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/5"
+                                                                    value={opt.price || ""}
+                                                                    onChange={(e) => handleUpdateOption(group.id, opt.id, { price: parseFloat(e.target.value) || 0 })}
+                                                                />
+                                                                <span className="text-[10px] text-zinc-400 font-bold">TL</span>
+                                                            </div>
+                                                            <Button size="icon" variant="ghost" className="h-6 w-6 text-zinc-300 hover:text-red-500" onClick={() => handleRemoveOption(group.id, opt.id)}>
+                                                                <X className="w-3.5 h-3.5" />
+                                                            </Button>
+                                                        </Reorder.Item>
+                                                    ))}
+                                                </Reorder.Group>
+                                                
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="w-full h-8 text-[10px] font-bold text-zinc-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-lg mt-1"
+                                                    onClick={() => handleAddOption(group.id)}
+                                                >
+                                                    <Plus className="w-3 h-3 mr-1" />
+                                                    Seçenek Ekle
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </Reorder.Item>
+                                ))}
+                            </Reorder.Group>
+                            
+                            {productForm.variations.length === 0 && (
+                                <div className="text-center py-6 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50/50 dark:bg-zinc-900/30">
+                                    <p className="text-xs text-zinc-400">Henüz varyasyon grubu eklenmedi.</p>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="space-y-4 pt-6 border-t border-zinc-100 dark:border-zinc-800">
                             {/* Tabs for Image Mode */}
                             <div className="flex bg-zinc-100 dark:bg-zinc-800/50 p-1 rounded-lg">
                                 <button

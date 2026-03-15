@@ -103,11 +103,12 @@ export const mockProducts: Product[] = [
             {
                 id: 'var_08',
                 name: 'Seçenek',
-                isRequired: false,
+                type: 'single',
                 options: [
-                    { id: 'opt_08a', name: 'Sade', priceDelta: 0 },
-                    { id: 'opt_08b', name: 'Baharatlı', priceDelta: 0 },
+                    { id: 'opt_08a', name: 'Sade', price: 0, orderIndex: 0 },
+                    { id: 'opt_08b', name: 'Baharatlı', price: 0, orderIndex: 1 },
                 ],
+                orderIndex: 0
             }
         ],
     },
@@ -124,11 +125,12 @@ export const mockProducts: Product[] = [
             {
                 id: 'var_09',
                 name: 'Pişirme',
-                isRequired: false,
+                type: 'single',
                 options: [
-                    { id: 'opt_09a', name: 'Haşlama', priceDelta: 0 },
-                    { id: 'opt_09b', name: 'Kızartma', priceDelta: 0 },
+                    { id: 'opt_09a', name: 'Haşlama', price: 0, orderIndex: 0 },
+                    { id: 'opt_09b', name: 'Kızartma', price: 0, orderIndex: 1 },
                 ],
+                orderIndex: 0
             }
         ],
     },
@@ -158,13 +160,14 @@ export const mockProducts: Product[] = [
             {
                 id: 'var_11',
                 name: 'Çeşit',
-                isRequired: true,
+                type: 'single',
                 options: [
-                    { id: 'opt_11a', name: 'Cola', priceDelta: 0 },
-                    { id: 'opt_11b', name: 'Fanta', priceDelta: 0 },
-                    { id: 'opt_11c', name: 'Sprite', priceDelta: 0 },
-                    { id: 'opt_11d', name: 'Fuse Tea', priceDelta: 0 },
+                    { id: 'opt_11a', name: 'Cola', price: 0, orderIndex: 0 },
+                    { id: 'opt_11b', name: 'Fanta', price: 0, orderIndex: 1 },
+                    { id: 'opt_11c', name: 'Sprite', price: 0, orderIndex: 2 },
+                    { id: 'opt_11d', name: 'Fuse Tea', price: 0, orderIndex: 3 },
                 ],
+                orderIndex: 0
             }
         ],
     },

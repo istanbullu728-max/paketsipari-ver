@@ -58,8 +58,8 @@ export default function StorefrontHeader({ restaurant }: { restaurant: Restauran
                                 <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight leading-none">
                                     {restaurant.name}
                                 </h1>
-                                <p className="text-sm text-gray-500 mt-1 font-medium">
-                                    Kebap • Pide • Izgara Çeşitleri
+                                <p className="text-sm text-gray-500 mt-1 font-medium truncate">
+                                    {restaurant.description || "Kebap • Pide • Izgara Çeşitleri"}
                                 </p>
 
                                 {/* Badges row */}
@@ -79,16 +79,18 @@ export default function StorefrontHeader({ restaurant }: { restaurant: Restauran
                                         <span className={`w-2 h-2 rounded-full ${isOpen ? "bg-emerald-500 animate-pulse" : "bg-red-400"
                                             }`} />
                                         {isOpen ? "Açık" : "Kapalı"}
-                                        <span className="font-normal opacity-70 ml-0.5">
+                                        <span className="font-normal opacity-70 ml-0.5 whitespace-nowrap">
                                             {todaySchedule.isClosed ? "Tüm Gün Kapalı" : `${todaySchedule.open}–${todaySchedule.close}`}
                                         </span>
                                     </span>
 
                                     {/* Location */}
-                                    <span className="hidden sm:inline-flex items-center gap-1 text-xs text-gray-500 bg-gray-50 border border-gray-200 px-2.5 py-1 rounded-lg font-medium">
-                                        <MapPin className="w-3.5 h-3.5 text-gray-400" />
-                                        Merkez, İstanbul
-                                    </span>
+                                    {restaurant.address && (
+                                        <span className="inline-flex items-center gap-1 text-xs text-gray-500 bg-gray-50 border border-gray-200 px-2.5 py-1 rounded-lg font-medium max-w-[150px] sm:max-w-[200px]">
+                                            <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                                            <span className="truncate">{restaurant.address}</span>
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         </div>

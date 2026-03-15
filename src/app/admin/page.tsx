@@ -2,7 +2,7 @@
 
 import { useOrders } from "@/components/order-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, ShoppingBag, CheckCircle, Users } from "lucide-react";
+import { DollarSign, ShoppingBag, CheckCircle, Users, XCircle } from "lucide-react";
 import dynamic from "next/dynamic";
 import TopSellersCard from "@/components/admin/top-sellers-card";
 import LoyalCustomersCard from "@/components/admin/loyal-customers-card";
@@ -24,7 +24,7 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* ── Top KPI Cards ─────────────────────── */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
                 <Card className="bg-white dark:bg-zinc-950 border-slate-100 dark:border-zinc-800 shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                         <CardTitle className="text-sm font-medium text-zinc-600 dark:text-zinc-400">Bugünkü Ciro</CardTitle>
@@ -63,6 +63,20 @@ export default function AdminDashboardPage() {
                     <CardContent className="relative z-10">
                         <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{metrics.completedCount}</div>
                         <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1">Bugün teslim edilenler</p>
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-white dark:bg-zinc-950 border-slate-100 dark:border-zinc-800 shadow-sm relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-full blur-3xl -mr-10 -mt-10 transition-all group-hover:bg-red-500/20" />
+                    <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 relative z-10">
+                        <CardTitle className="text-sm font-medium text-zinc-600 dark:text-zinc-400">İptal Edilenler</CardTitle>
+                        <div className="p-2 bg-red-50 dark:bg-red-500/10 rounded-full">
+                            <XCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
+                        </div>
+                    </CardHeader>
+                    <CardContent className="relative z-10">
+                        <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{metrics.cancelledCount}</div>
+                        <p className="text-xs text-red-600 dark:text-red-400 font-medium mt-1">İptal edilen siparişler</p>
                     </CardContent>
                 </Card>
 

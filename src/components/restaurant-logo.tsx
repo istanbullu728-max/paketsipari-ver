@@ -76,11 +76,17 @@ export function RestaurantLogo({
                     dominantBaseline="middle"
                     textAnchor="middle"
                     fill={darkGray}
+                    textLength={restaurantName.length > 2 ? "180" : undefined}
+                    lengthAdjust="spacingAndGlyphs"
                     style={{
-                        fontSize: restaurantName.length > 12 ? "24px" : "32px",
+                        fontSize: restaurantName.length > 15 
+                            ? "20px" 
+                            : restaurantName.length > 10 
+                                ? "26px" 
+                                : "32px",
                         fontWeight: 400,
                         fontFamily: "'Times New Roman', serif",
-                        letterSpacing: "0.1em",
+                        letterSpacing: "0.05em",
                         textTransform: "uppercase"
                     }}
                 >

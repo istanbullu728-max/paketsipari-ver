@@ -33,7 +33,7 @@ export default function ProductVariationModal({
             setQuantity(1);
             const initialSelections: Record<string, string[]> = {};
             product.variations.forEach(v => {
-                if (v.isRequired && v.options.length > 0) {
+                if (v.type === "single" && v.options.length > 0) {
                     initialSelections[v.id] = [v.options[0].id];
                 } else {
                     initialSelections[v.id] = [];
@@ -45,15 +45,18 @@ export default function ProductVariationModal({
 
     if (!product) return null;
 
-    const handleSelection = (variationId: string, optionId: string, isSingleChoice: boolean) => {
+    const handleSelection = (variationId: string, optionId: string, type: "single" | "multiple", max?: number) => {
         setSelections(prev => {
-            if (isSingleChoice) {
+            if (type === "single") {
                 return { ...prev, [variationId]: [optionId] };
             } else {
                 const current = prev[variationId] || [];
                 if (current.includes(optionId)) {
                     return { ...prev, [variationId]: current.filter(id => id !== optionId) };
                 } else {
+                    if (max && current.length >= max) {
+                        return prev; // Respect max limit
+                    }
                     return { ...prev, [variationId]: [...current, optionId] };
                 }
             }
@@ -68,7 +71,7 @@ export default function ProductVariationModal({
             if (variation) {
                 selectedOptIds.forEach(optId => {
                     const opt = variation.options.find(o => o.id === optId);
-                    if (opt) extra += opt.priceDelta;
+                    if (opt) extra += opt.price;
                 });
             }
         });
@@ -76,12 +79,23 @@ export default function ProductVariationModal({
     };
 
     const handleAdd = () => {
-        const missingRequired = product.variations.filter(
-            v => v.isRequired && (!selections[v.id] || selections[v.id].length === 0)
-        );
-        if (missingRequired.length > 0) {
-            alert(`Lütfen zorunlu seçimleri yapınız: ${missingRequired.map(v => v.name).join(", ")}`);
-            return;
+        // Validation
+        for (const v of product.variations) {
+            const selectedCount = selections[v.id]?.length || 0;
+            if (v.type === "single" && selectedCount === 0) {
+                alert(`${v.name} seçimi zorunludur.`);
+                return;
+            }
+            if (v.type === "multiple") {
+                if (v.min && selectedCount < v.min) {
+                    alert(`${v.name} için en az ${v.min} seçenek seçmelisiniz.`);
+                    return;
+                }
+                if (v.max && selectedCount > v.max) {
+                    alert(`${v.name} için en fazla ${v.max} seçenek seçebilirsiniz.`);
+                    return;
+                }
+            }
         }
 
         const selectedOptionsList: CartItem["selectedOptions"] = [];
@@ -97,7 +111,7 @@ export default function ProductVariationModal({
                             variationName: variation.name,
                             optionId: opt.id,
                             optionName: opt.name,
-                            priceDelta: opt.priceDelta
+                            priceDelta: opt.price
                         });
                     }
                 });
@@ -147,29 +161,43 @@ export default function ProductVariationModal({
                 <ScrollArea className="flex-1 px-5">
                     <div className="pb-4 space-y-5 mt-2">
                         {product.variations.map(variation => {
-                            const isSingleChoice = variation.isRequired;
+                            const isSingleChoice = variation.type === "single";
                             return (
                                 <div key={variation.id} className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
                                     <div className="flex justify-between items-center mb-3">
-                                        <h4 className="font-semibold text-sm">{variation.name}</h4>
-                                        {variation.isRequired && (
-                                            <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">Zorunlu</span>
+                                        <div className="space-y-0.5">
+                                            <h4 className="font-bold text-sm">{variation.name}</h4>
+                                            {variation.type === "multiple" && (variation.min || variation.max) && (
+                                                <p className="text-[10px] text-gray-400 font-medium">
+                                                    {variation.min && variation.max 
+                                                        ? `En az ${variation.min}, en fazla ${variation.max} seçenek`
+                                                        : variation.min 
+                                                            ? `En az ${variation.min} seçenek` 
+                                                            : `En fazla ${variation.max} seçenek`}
+                                                </p>
+                                            )}
+                                        </div>
+                                        {variation.type === "single" && (
+                                            <span className="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Zorunlu</span>
+                                        )}
+                                        {variation.type === "multiple" && variation.min && variation.min > 0 && (
+                                            <span className="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Zorunlu</span>
                                         )}
                                     </div>
 
                                     {isSingleChoice ? (
                                         <RadioGroup
                                             value={selections[variation.id]?.[0]}
-                                            onValueChange={(val: string) => handleSelection(variation.id, val, true)}
+                                            onValueChange={(val: string) => handleSelection(variation.id, val, "single")}
                                             className="space-y-3"
                                         >
                                             {variation.options.map(opt => (
                                                 <div key={opt.id} className="flex items-center justify-between min-h-[36px]">
                                                     <div className="flex items-center space-x-3">
                                                         <RadioGroupItem value={opt.id} id={opt.id} className="shrink-0" />
-                                                        <Label htmlFor={opt.id} className="cursor-pointer text-sm leading-snug">{opt.name}</Label>
+                                                        <Label htmlFor={opt.id} className="cursor-pointer text-sm font-medium leading-snug">{opt.name}</Label>
                                                     </div>
-                                                    {opt.priceDelta > 0 && <span className="text-sm text-gray-500 font-medium shrink-0">+{opt.priceDelta} TL</span>}
+                                                    {opt.price > 0 && <span className="text-sm text-primary font-bold shrink-0">+{opt.price} TL</span>}
                                                 </div>
                                             ))}
                                         </RadioGroup>
@@ -180,13 +208,13 @@ export default function ProductVariationModal({
                                                     <div className="flex items-center space-x-3">
                                                         <Checkbox
                                                             id={opt.id}
-                                                            checked={selections[variation.id]?.includes(opt.id)}
-                                                            onCheckedChange={() => handleSelection(variation.id, opt.id, false)}
+                                                            checked={selections[variation.id]?.includes(opt.id) || false}
+                                                            onCheckedChange={() => handleSelection(variation.id, opt.id, "multiple", variation.max)}
                                                             className="shrink-0"
                                                         />
-                                                        <Label htmlFor={opt.id} className="cursor-pointer text-sm leading-snug">{opt.name}</Label>
+                                                        <Label htmlFor={opt.id} className="cursor-pointer text-sm font-medium leading-snug">{opt.name}</Label>
                                                     </div>
-                                                    {opt.priceDelta > 0 && <span className="text-sm text-gray-500 font-medium shrink-0">+{opt.priceDelta} TL</span>}
+                                                    {opt.price > 0 && <span className="text-sm text-primary font-bold shrink-0">+{opt.price} TL</span>}
                                                 </div>
                                             ))}
                                         </div>
@@ -198,7 +226,7 @@ export default function ProductVariationModal({
                 </ScrollArea>
 
                 {/* Footer — sticky at bottom */}
-                <div className="p-4 border-t bg-white shrink-0 flex items-center gap-3 safe-area-pb">
+                <div className="p-4 border-t bg-white shrink-0 flex items-center gap-3 safe-area-pb mb-2">
                     {/* Quantity */}
                     <div className="flex items-center bg-gray-100 rounded-xl p-1 border shrink-0">
                         <Button
@@ -222,7 +250,7 @@ export default function ProductVariationModal({
 
                     <Button
                         onClick={handleAdd}
-                        className="flex-1 h-12 text-sm font-bold shadow-md rounded-xl"
+                        className="flex-1 h-12 text-sm font-bold shadow-md rounded-xl bg-primary hover:bg-primary/90 text-white"
                     >
                         Sepete Ekle &bull; {calculateTotal().toFixed(2)} TL
                     </Button>

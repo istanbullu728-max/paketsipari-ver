@@ -20,7 +20,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
                 <p className="font-bold text-zinc-700 dark:text-zinc-300 mb-2">{label}</p>
                 {payload.map((entry: any) => (
                     <p key={entry.name} className="text-xs" style={{ color: entry.color }}>
-                        {entry.name === "ciro" ? `Ciro: ${entry.value.toLocaleString("tr-TR")} TL` : `Sipariş: ${entry.value}`}
+                        {entry.name === "ciro" ? `Ciro: ${entry.value.toLocaleString("tr-TR")} TL` : 
+                         entry.name === "sipariş" ? `Sipariş: ${entry.value}` : 
+                         `İptal: ${entry.value}`}
                     </p>
                 ))}
             </div>
@@ -45,13 +47,14 @@ export default function WeeklySalesChart() {
             o.createdAt.getFullYear() === d.getFullYear()
         );
 
-        const ordersCount = dayOrders.length;
-        const revenue = dayOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+        const ordersCount = dayOrders.filter(o => o.status !== "cancelled").length;
+        const cancelledCount = dayOrders.filter(o => o.status === "cancelled").length;
+        const revenue = dayOrders.filter(o => o.status !== "cancelled").reduce((sum, o) => sum + o.totalAmount, 0);
 
         const dayName = new Intl.DateTimeFormat('tr-TR', { weekday: 'short' }).format(d);
         const formattedDayName = dayName.charAt(0).toUpperCase() + dayName.slice(1);
 
-        return { day: formattedDayName, sipariş: ordersCount, ciro: revenue };
+        return { day: formattedDayName, sipariş: ordersCount, iptal: cancelledCount, ciro: revenue };
     });
     const totalRevenue = weeklyData.reduce((sum, d) => sum + d.ciro, 0);
     const totalOrders = weeklyData.reduce((sum, d) => sum + d.sipariş, 0);
@@ -91,6 +94,10 @@ export default function WeeklySalesChart() {
                                 <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.15} />
                                 <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
                             </linearGradient>
+                            <linearGradient id="colorIptal" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#ef4444" stopOpacity={0.15} />
+                                <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                            </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" className="dark:stroke-zinc-800" />
                         <XAxis dataKey="day" tick={{ fontSize: 12, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
@@ -116,11 +123,22 @@ export default function WeeklySalesChart() {
                             dot={false}
                             activeDot={{ r: 5, fill: "#f59e0b" }}
                         />
+                        <Area
+                            type="monotone"
+                            dataKey="iptal"
+                            name="iptal"
+                            stroke="#ef4444"
+                            strokeWidth={2}
+                            fill="url(#colorIptal)"
+                            dot={false}
+                            activeDot={{ r: 5, fill: "#ef4444" }}
+                        />
                     </AreaChart>
                 </ResponsiveContainer>
-                <div className="flex gap-6 mt-2 justify-center text-xs text-zinc-500">
+                <div className="flex gap-4 mt-2 justify-center text-[10px] sm:text-xs text-zinc-500 flex-wrap">
                     <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>Ciro (TL)</span>
-                    <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-amber-400 inline-block"></span>Sipariş Sayısı</span>
+                    <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-amber-400 inline-block"></span>Sipariş</span>
+                    <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-red-500 inline-block"></span>İptal Edilen</span>
                 </div>
             </CardContent>
         </Card>
