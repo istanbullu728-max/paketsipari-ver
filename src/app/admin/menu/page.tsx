@@ -285,28 +285,38 @@ export default function AdminMenuPage() {
         if (!cleanQuery) return;
 
         setIsSearching(true);
-        setSearchResults([]); // Clear old results
+        setSearchResults([]);
         const currentSearchId = Date.now();
         (window as any)._lastSearchId = currentSearchId;
 
-        // Enhanced search term for better "Google-like" results
+        // Enhanced translation and refinement
         let searchTerm = cleanQuery.toLowerCase();
-        
-        // Translation and refinement
         const engQueryMap: Record<string, string> = {
-            "sufle": "chocolate souffle lava cake",
-            "adana": "adana kebab plate",
+            "sufle": "chocolate souffle",
+            "adana": "adana kebab",
             "kebap": "turkish kebab",
-            "döner": "doner kebab food",
+            "döner": "doner kebab",
             "dürüm": "turkish wrap",
             "ayran": "turkish yogurt drink",
             "lahmacun": "lahmacun turkish pizza",
             "pide": "turkish pide",
             "tatlı": "turkish dessert",
-            "künefe": "kunefe dessert",
+            "künefe": "kunefe",
             "porsiyon": "plate food",
-            "et": "beef meat dish",
-            "tavuk": "grilled chicken food"
+            "et": "meat dish",
+            "tavuk": "chicken dish",
+            "iskender": "iskender kebab",
+            "köfte": "meatballs turkish",
+            "çorba": "turkish soup",
+            "baklava": "baklava",
+            "içli köfte": "kibbeh turkish",
+            "salata": "turkish salad",
+            "meze": "turkish meze",
+            "kola": "coca cola",
+            "fanta": "fanta orange",
+            "su": "bottled water mineral",
+            "ayran": "ayran drink",
+            "şalgam": "turnip juice turkish"
         };
 
         for (const [tr, en] of Object.entries(engQueryMap)) {
@@ -316,38 +326,55 @@ export default function AdminMenuPage() {
             }
         }
         
-        if (!searchTerm.includes("food") && !searchTerm.includes("dish")) {
-            searchTerm = `${searchTerm} food photography`;
+        if (!searchTerm.includes("food") && !searchTerm.includes("drink") && !searchTerm.includes("turkish")) {
+            searchTerm = `${searchTerm} food`;
         }
 
         try {
-            // Using a more reliable search strategy that mimics Google Images quality
-            const apiKey = "48154694-358043b2f211516f4c4a4f895";
-            const res = await fetch(`https://pixabay.com/api/?key=${apiKey}&q=${encodeURIComponent(searchTerm)}&image_type=photo&category=food&per_page=15&safesearch=true&order=popular`);
+            // STRATEGY 1: Unsplash (High Quality)
+            // Note: NAPI is Unsplash internal API, might have CORS on some envs
+            // If CORS fails, we have Strategy 2.
+            const unsplashUrl = `https://unsplash.com/napi/search/photos?query=${encodeURIComponent(searchTerm)}&per_page=12`;
             
-            if (res.ok) {
-                const data = await res.json();
-                if ((window as any)._lastSearchId !== currentSearchId) return;
-
-                if (data.hits && data.hits.length > 0) {
-                    setSearchResults(data.hits.map((h: any) => h.webformatURL));
-                } else {
-                    // Fallback to simpler search
-                    const res2 = await fetch(`https://pixabay.com/api/?key=${apiKey}&q=${encodeURIComponent(cleanQuery)}&image_type=photo&per_page=15`);
-                    const data2 = await res2.json();
-                    if (data2.hits && data2.hits.length > 0) {
-                        setSearchResults(data2.hits.map((h: any) => h.webformatURL));
+            try {
+                const res = await fetch(unsplashUrl);
+                if (res.ok) {
+                    const data = await res.json();
+                    if ((window as any)._lastSearchId !== currentSearchId) return;
+                    if (data.results && data.results.length > 0) {
+                        setSearchResults(data.results.map((r: any) => r.urls.regular));
+                        setIsSearching(false);
+                        return;
                     }
                 }
+            } catch (e) {
+                console.warn("Unsplash fetch failed, trying Wikimedia...");
             }
+
+            // STRATEGY 2: Wikimedia Commons (Highly reliable, no key, CORS friendly)
+            const wikiUrl = `https://commons.wikimedia.org/w/api.php?action=query&format=json&prop=imageinfo&generator=search&gsrsearch=${encodeURIComponent(searchTerm)}&gsrnamespace=6&iiprop=url&gsrlimit=12&origin=*`;
+            const wikiRes = await fetch(wikiUrl);
+            if (wikiRes.ok) {
+                const wikiData = await wikiRes.json();
+                if ((window as any)._lastSearchId !== currentSearchId) return;
+                const pages = wikiData.query?.pages || {};
+                const urls = Object.values(pages).map((p: any) => p.imageinfo?.[0]?.url).filter(Boolean);
+                if (urls.length > 0) {
+                    setSearchResults(urls);
+                    setIsSearching(false);
+                    return;
+                }
+            }
+
+            // STRATEGY 3: LoremFlickr (Always works)
+            const fallbackResults = [];
+            for(let i=1; i<=9; i++) {
+                fallbackResults.push(`https://loremflickr.com/800/600/${encodeURIComponent(cleanQuery.replace(/\s+/g, ','))},food?lock=${i}`);
+            }
+            setSearchResults(fallbackResults);
+
         } catch (error) {
-            console.error("Search error:", error);
-            // Dynamic fallback if API fails
-            const fallbacks = [];
-            for(let i=1; i<=12; i++) {
-                fallbacks.push(`https://loremflickr.com/800/600/${encodeURIComponent(cleanQuery.replace(/\s+/g, ','))},food?lock=${i}`);
-            }
-            setSearchResults(fallbacks);
+            console.error("Master search error:", error);
         } finally {
             if ((window as any)._lastSearchId === currentSearchId) {
                 setIsSearching(false);
