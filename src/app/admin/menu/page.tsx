@@ -285,48 +285,45 @@ export default function AdminMenuPage() {
         if (!cleanQuery) return;
 
         setIsSearching(true);
+        setSearchResults([]); // Clear old results
         const currentSearchId = Date.now();
         (window as any)._lastSearchId = currentSearchId;
 
+        // Enhanced search term for better "Google-like" results
         let searchTerm = cleanQuery.toLowerCase();
-        let matched = false;
-
+        
+        // Translation and refinement
         const engQueryMap: Record<string, string> = {
-            "sufle": "souffle chocolate dessert",
-            "adana": "adana kebab",
+            "sufle": "chocolate souffle lava cake",
+            "adana": "adana kebab plate",
             "kebap": "turkish kebab",
-            "döner": "doner kebab meat",
+            "döner": "doner kebab food",
             "dürüm": "turkish wrap",
-            "ayran": "yogurt drink",
-            "kola": "coca cola",
-            "lahmacun": "turkish pizza",
+            "ayran": "turkish yogurt drink",
+            "lahmacun": "lahmacun turkish pizza",
             "pide": "turkish pide",
-            "tatlı": "dessert",
-            "künefe": "kunefe",
-            "çorba": "soup",
-            "pilav": "rice bowl",
-            "tavuk": "chicken dish",
-            "köfte": "meatballs",
-            "pizza": "pizza",
-            "burger": "hamburger",
-            "hamburger": "hamburger"
+            "tatlı": "turkish dessert",
+            "künefe": "kunefe dessert",
+            "porsiyon": "plate food",
+            "et": "beef meat dish",
+            "tavuk": "grilled chicken food"
         };
 
         for (const [tr, en] of Object.entries(engQueryMap)) {
-            if (searchTerm.includes(tr) || tr.includes(searchTerm)) {
+            if (searchTerm.includes(tr)) {
                 searchTerm = en;
-                matched = true;
                 break;
             }
         }
         
-        if (!matched && !searchTerm.includes("su") && !searchTerm.includes("içecek")) {
-             searchTerm = `${searchTerm} food`;
+        if (!searchTerm.includes("food") && !searchTerm.includes("dish")) {
+            searchTerm = `${searchTerm} food photography`;
         }
 
         try {
+            // Using a more reliable search strategy that mimics Google Images quality
             const apiKey = "48154694-358043b2f211516f4c4a4f895";
-            const res = await fetch(`https://pixabay.com/api/?key=${apiKey}&q=${encodeURIComponent(searchTerm)}&image_type=photo&category=food&per_page=12&safesearch=true`);
+            const res = await fetch(`https://pixabay.com/api/?key=${apiKey}&q=${encodeURIComponent(searchTerm)}&image_type=photo&category=food&per_page=15&safesearch=true&order=popular`);
             
             if (res.ok) {
                 const data = await res.json();
@@ -335,22 +332,22 @@ export default function AdminMenuPage() {
                 if (data.hits && data.hits.length > 0) {
                     setSearchResults(data.hits.map((h: any) => h.webformatURL));
                 } else {
-                    throw new Error("No results");
+                    // Fallback to simpler search
+                    const res2 = await fetch(`https://pixabay.com/api/?key=${apiKey}&q=${encodeURIComponent(cleanQuery)}&image_type=photo&per_page=15`);
+                    const data2 = await res2.json();
+                    if (data2.hits && data2.hits.length > 0) {
+                        setSearchResults(data2.hits.map((h: any) => h.webformatURL));
+                    }
                 }
-            } else {
-                throw new Error("API error");
             }
         } catch (error) {
-            console.error("Image search error, falling back to dynamic service:", error);
-            if ((window as any)._lastSearchId !== currentSearchId) return;
-
-            // DYNAMIC FALLBACK: Use LoremFlickr which is extremely reliable and keyless
-            const fallbackResults = [];
-            const tags = searchTerm.replace(/\s+/g, ',');
-            for (let i = 1; i <= 9; i++) {
-                fallbackResults.push(`https://loremflickr.com/800/600/${tags}?lock=${i}`);
+            console.error("Search error:", error);
+            // Dynamic fallback if API fails
+            const fallbacks = [];
+            for(let i=1; i<=12; i++) {
+                fallbacks.push(`https://loremflickr.com/800/600/${encodeURIComponent(cleanQuery.replace(/\s+/g, ','))},food?lock=${i}`);
             }
-            setSearchResults(fallbackResults);
+            setSearchResults(fallbacks);
         } finally {
             if ((window as any)._lastSearchId === currentSearchId) {
                 setIsSearching(false);
@@ -570,133 +567,137 @@ export default function AdminMenuPage() {
                             </div>
                         </div>
 
-                        {/* --- VARIATION MANAGEMENT --- */}
+                        {/* --- SIMPLIFIED VARIATION MANAGEMENT --- */}
                         <div className="space-y-4 pt-6 border-t border-zinc-100 dark:border-zinc-800">
                             <div className="flex items-center justify-between">
-                                <h4 className="text-sm font-bold flex items-center gap-2">
-                                    <Settings2 className="w-4 h-4 text-zinc-400" />
-                                    Varyasyon ve Seçenekler
-                                </h4>
+                                <Label className="text-sm font-bold flex items-center gap-2">
+                                    <ListPlus className="w-4 h-4 text-emerald-600" />
+                                    Varyasyonlar
+                                </Label>
                                 <Button 
                                     type="button" 
-                                    variant="outline" 
+                                    variant="ghost" 
                                     size="sm" 
-                                    className="h-8 text-[11px] font-bold border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                                    className="h-8 text-[11px] font-bold text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
                                     onClick={handleAddVariationGroup}
                                 >
-                                    <ListPlus className="w-3.5 h-3.5 mr-1" />
-                                    Grup Ekle
+                                    <Plus className="w-3.5 h-3.5 mr-1" />
+                                    Yeni Grup
                                 </Button>
                             </div>
 
-                            <Reorder.Group axis="y" values={productForm.variations} onReorder={(newOrder) => setProductForm(prev => ({ ...prev, variations: newOrder }))} className="space-y-4">
+                            {/* Quick Presets */}
+                            {productForm.variations.length === 0 && (
+                                <div className="flex flex-wrap gap-2 pb-2">
+                                    <button 
+                                        type="button"
+                                        onClick={() => {
+                                            const newGroup: ProductVariation = { id: `var-${Date.now()}`, name: "Ekstralar", type: "multiple", options: [], orderIndex: 0 };
+                                            setProductForm(prev => ({ ...prev, variations: [newGroup] }));
+                                        }}
+                                        className="text-[10px] font-bold px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
+                                    >
+                                        + Ekstralar
+                                    </button>
+                                    <button 
+                                        type="button"
+                                        onClick={() => {
+                                            const newGroup: ProductVariation = { id: `var-${Date.now()}`, name: "İçecek Seçimi", type: "single", options: [{ id: 'o1', name: 'Ayran', price: 0, orderIndex:0 }], orderIndex: 0 };
+                                            setProductForm(prev => ({ ...prev, variations: [newGroup] }));
+                                        }}
+                                        className="text-[10px] font-bold px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
+                                    >
+                                        + İçecek
+                                    </button>
+                                    <button 
+                                        type="button"
+                                        onClick={() => {
+                                            const newGroup: ProductVariation = { id: `var-${Date.now()}`, name: "Porsiyon", type: "single", options: [{ id: 'o1', name: 'Standart', price: 0, orderIndex:0 }], orderIndex: 0 };
+                                            setProductForm(prev => ({ ...prev, variations: [newGroup] }));
+                                        }}
+                                        className="text-[10px] font-bold px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
+                                    >
+                                        + Porsiyon
+                                    </button>
+                                </div>
+                            )}
+
+                            <div className="space-y-3">
                                 {productForm.variations.map((group) => (
-                                    <Reorder.Item key={group.id} value={group} className="bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-zinc-100 dark:border-zinc-800 p-4 relative group/var">
-                                        <div className="absolute top-4 left-2 cursor-grab active:cursor-grabbing text-zinc-300 opacity-0 group-hover/var:opacity-100 transition-opacity">
-                                            <GripVertical className="w-4 h-4" />
-                                        </div>
-                                        
-                                        <div className="pl-4 space-y-4">
-                                            <div className="flex gap-2 items-start">
-                                                <div className="flex-1 space-y-1.5">
-                                                    <Input
-                                                        placeholder="Grup Başlığı (Örn: Ekstralar)"
-                                                        value={group.name}
-                                                        onChange={(e) => handleUpdateVariationGroup(group.id, { name: e.target.value })}
-                                                        className="h-9 font-bold bg-white dark:bg-black border-transparent focus:border-zinc-200 dark:focus:border-zinc-700 px-0 shadow-none focus:px-3 transition-all"
-                                                    />
-                                                </div>
-                                                <Button size="icon" variant="ghost" className="h-8 w-8 text-zinc-400 hover:text-red-500" onClick={() => handleRemoveVariationGroup(group.id)}>
-                                                    <Trash2 className="w-3.5 h-3.5" />
-                                                </Button>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-3 pb-2">
-                                                <div className="space-y-1">
-                                                    <Label className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Seçim Tipi</Label>
-                                                    <select
-                                                        className="w-full text-xs h-8 bg-white dark:bg-black rounded-md border border-zinc-200 dark:border-zinc-800 px-2"
-                                                        value={group.type}
-                                                        onChange={(e) => handleUpdateVariationGroup(group.id, { type: e.target.value as "single" | "multiple" })}
-                                                    >
-                                                        <option value="single">Tekli Seçim (Radio)</option>
-                                                        <option value="multiple">Çoklu Seçim (Checkbox)</option>
-                                                    </select>
-                                                </div>
-                                                {group.type === "multiple" && (
-                                                    <div className="flex gap-2">
-                                                        <div className="space-y-1 flex-1">
-                                                            <Label className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Min</Label>
-                                                            <Input
-                                                                type="number"
-                                                                className="h-8 text-xs px-2"
-                                                                value={group.min || ""}
-                                                                onChange={(e) => handleUpdateVariationGroup(group.id, { min: parseInt(e.target.value) || 0 })}
-                                                            />
-                                                        </div>
-                                                        <div className="space-y-1 flex-1">
-                                                            <Label className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Max</Label>
-                                                            <Input
-                                                                type="number"
-                                                                className="h-8 text-xs px-2"
-                                                                value={group.max || ""}
-                                                                onChange={(e) => handleUpdateVariationGroup(group.id, { max: parseInt(e.target.value) || 0 })}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* Options List */}
-                                            <div className="space-y-2 border-t border-zinc-100 dark:border-zinc-800/50 pt-3">
-                                                <Reorder.Group axis="y" values={group.options} onReorder={(newOpts) => handleUpdateVariationGroup(group.id, { options: newOpts })} className="space-y-1.5">
-                                                    {group.options.map((opt) => (
-                                                        <Reorder.Item key={opt.id} value={opt} className="flex gap-2 items-center bg-white dark:bg-zinc-800/50 p-1.5 rounded-lg border border-zinc-100 dark:border-zinc-800 group/opt">
-                                                            <div className="cursor-grab text-zinc-300">
-                                                                <GripVertical className="w-3.5 h-3.5" />
-                                                            </div>
-                                                            <Input
-                                                                placeholder="Seçenek adı"
-                                                                className="h-8 text-xs border-none shadow-none focus:ring-1 focus:ring-emerald-500/20 px-1"
-                                                                value={opt.name}
-                                                                onChange={(e) => handleUpdateOption(group.id, opt.id, { name: e.target.value })}
-                                                            />
-                                                            <div className="flex items-center gap-1 shrink-0">
-                                                                <span className="text-[10px] text-zinc-400 font-bold">+</span>
-                                                                <Input
-                                                                    type="number"
-                                                                    className="h-8 w-16 text-xs border-none text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/5"
-                                                                    value={opt.price || ""}
-                                                                    onChange={(e) => handleUpdateOption(group.id, opt.id, { price: parseFloat(e.target.value) || 0 })}
-                                                                />
-                                                                <span className="text-[10px] text-zinc-400 font-bold">TL</span>
-                                                            </div>
-                                                            <Button size="icon" variant="ghost" className="h-6 w-6 text-zinc-300 hover:text-red-500" onClick={() => handleRemoveOption(group.id, opt.id)}>
-                                                                <X className="w-3.5 h-3.5" />
-                                                            </Button>
-                                                        </Reorder.Item>
-                                                    ))}
-                                                </Reorder.Group>
-                                                
-                                                <Button
+                                    <div key={group.id} className="bg-zinc-50 dark:bg-zinc-900/30 rounded-xl border border-zinc-100 dark:border-zinc-800 p-3 space-y-3">
+                                        <div className="flex gap-2 items-center">
+                                            <Input
+                                                placeholder="Grup Adı (Örn: Malzemeler)"
+                                                value={group.name}
+                                                onChange={(e) => handleUpdateVariationGroup(group.id, { name: e.target.value })}
+                                                className="h-8 font-bold border-none bg-transparent shadow-none px-0 focus:ring-0"
+                                            />
+                                            <div className="flex bg-zinc-200/50 dark:bg-zinc-800 rounded-lg p-0.5">
+                                                <button 
                                                     type="button"
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="w-full h-8 text-[10px] font-bold text-zinc-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-lg mt-1"
-                                                    onClick={() => handleAddOption(group.id)}
+                                                    onClick={() => handleUpdateVariationGroup(group.id, { type: "single" })}
+                                                    className={`px-2 py-1 text-[9px] font-black rounded-md transition-all ${group.type === "single" ? "bg-white dark:bg-zinc-700 shadow-sm text-emerald-600" : "text-zinc-500"}`}
                                                 >
-                                                    <Plus className="w-3 h-3 mr-1" />
-                                                    Seçenek Ekle
-                                                </Button>
+                                                    TEK
+                                                </button>
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => handleUpdateVariationGroup(group.id, { type: "multiple" })}
+                                                    className={`px-2 py-1 text-[9px] font-black rounded-md transition-all ${group.type === "multiple" ? "bg-white dark:bg-zinc-700 shadow-sm text-emerald-600" : "text-zinc-500"}`}
+                                                >
+                                                    ÇOKLU
+                                                </button>
                                             </div>
+                                            <Button size="icon" variant="ghost" className="h-7 w-7 text-zinc-400 hover:text-red-500" onClick={() => handleRemoveVariationGroup(group.id)}>
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </Button>
                                         </div>
-                                    </Reorder.Item>
+
+                                        {/* Options Simple List */}
+                                        <div className="space-y-1.5 pl-2">
+                                            {group.options.map((opt) => (
+                                                <div key={opt.id} className="flex gap-1.5 items-center group/opt text-[12px]">
+                                                    <div className="w-1 h-1 rounded-full bg-zinc-300" />
+                                                    <Input
+                                                        placeholder="Seçenek..."
+                                                        className="h-7 flex-1 border-none shadow-none focus:ring-0 bg-transparent px-0"
+                                                        value={opt.name}
+                                                        onChange={(e) => handleUpdateOption(group.id, opt.id, { name: e.target.value })}
+                                                    />
+                                                    <div className="flex items-center bg-zinc-100 dark:bg-black/20 rounded px-1.5 h-6">
+                                                        <span className="text-[10px] text-zinc-400 font-bold mr-1">+</span>
+                                                        <input
+                                                            type="number"
+                                                            placeholder="0"
+                                                            className="w-10 bg-transparent text-center border-none text-[11px] font-bold text-emerald-600 focus:ring-0 p-0"
+                                                            value={opt.price || ""}
+                                                            onChange={(e) => handleUpdateOption(group.id, opt.id, { price: parseFloat(e.target.value) || 0 })}
+                                                        />
+                                                        <span className="text-[9px] text-zinc-400 pl-0.5">TL</span>
+                                                    </div>
+                                                    <Button size="icon" variant="ghost" className="h-6 w-6 opacity-0 group-hover/opt:opacity-100 text-zinc-300 hover:text-red-500" onClick={() => handleRemoveOption(group.id, opt.id)}>
+                                                        <X className="w-3 h-3" />
+                                                    </Button>
+                                                </div>
+                                            ))}
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-7 text-[10px] font-bold text-zinc-400 hover:text-emerald-600 w-fit px-2"
+                                                onClick={() => handleAddOption(group.id)}
+                                            >
+                                                <Plus className="w-3 h-3 mr-1" />
+                                                Seçenek Ekle
+                                            </Button>
+                                        </div>
+                                    </div>
                                 ))}
-                            </Reorder.Group>
+                            </div>
                             
                             {productForm.variations.length === 0 && (
-                                <div className="text-center py-6 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50/50 dark:bg-zinc-900/30">
-                                    <p className="text-xs text-zinc-400">Henüz varyasyon grubu eklenmedi.</p>
+                                <div className="text-center py-8 bg-zinc-50/50 dark:bg-zinc-900/30 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800">
+                                    <p className="text-xs text-zinc-400">Ürüne soslar, malzemeler veya porsiyonlar ekleyin.</p>
                                 </div>
                             )}
                         </div>
@@ -716,7 +717,7 @@ export default function AdminMenuPage() {
                                     onClick={() => setImageMode("search")}
                                     className={`flex-1 flex items-center justify-center gap-2 py-1.5 text-sm font-medium rounded-md transition-all ${imageMode === "search" ? "bg-white dark:bg-zinc-700 shadow-sm text-emerald-600 dark:text-emerald-400" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"}`}
                                 >
-                                    <Globe className="w-4 h-4" /> Google Görseller
+                                    <Search className="w-4 h-4" /> Google Görseller
                                 </button>
                             </div>
 
@@ -812,8 +813,8 @@ export default function AdminMenuPage() {
 
                                     {searchResults.length === 0 && !isSearching && (
                                         <div className="py-8 text-center text-zinc-400 text-sm flex flex-col items-center">
-                                            <Globe className="w-8 h-8 opacity-20 mb-2" />
-                                            Hiçbir resimle uğraşmadan adını yazın,<br />Google'dan sizin için bulalım.
+                                            <Search className="w-8 h-8 opacity-20 mb-2" />
+                                            En iyi Google Images sonuçlarını<br />sizin için bulalım.
                                         </div>
                                     )}
 
