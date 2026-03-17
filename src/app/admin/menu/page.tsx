@@ -383,9 +383,6 @@ export default function AdminMenuPage() {
                     <Button variant="outline" onClick={() => { setEditingCategory(null); setCategoryName(""); setIsCategoryDialogOpen(true); }}>
                         <Plus className="w-4 h-4 mr-2" /> Kategori
                     </Button>
-                    <Button variant="outline" className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-900/30" onClick={() => { setEditingProduct(null); setProductForm({ name: "", description: "", price: "", imageUrl: "", variations: [] }); setIsProductDialogOpen(true); }}>
-                        <Plus className="w-4 h-4 mr-2" /> Ürün
-                    </Button>
                     <Button
                         onClick={handlePublish}
                         disabled={isPublishing}
@@ -472,15 +469,19 @@ export default function AdminMenuPage() {
                                 </Card>
                             ))}
 
-                            {/* Empty State */}
-                            {draftData.products.filter(p => p.categoryId === selectedCategoryId).length === 0 && (
-                                <div className="col-span-full py-16 text-center border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl">
-                                    <h3 className="text-zinc-500 font-medium">Bu kategoride henüz ürün yok</h3>
-                                    <Button variant="link" className="text-emerald-600 mt-2" onClick={() => { setEditingProduct(null); setProductForm({ name: "", description: "", price: "", imageUrl: "", variations: [] }); setIsProductDialogOpen(true); }}>
-                                        Hemen ilk ürünü ekleyin
-                                    </Button>
+                            {/* Add Product Card */}
+                            <button
+                                onClick={() => { setEditingProduct(null); setProductForm({ name: "", description: "", price: "", imageUrl: "", variations: [] }); setIsProductDialogOpen(true); }}
+                                className="border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl p-4 flex flex-col items-center justify-center gap-3 min-h-[220px] hover:border-emerald-300 hover:bg-emerald-50/30 dark:hover:bg-emerald-500/5 transition-all group"
+                            >
+                                <div className="w-12 h-12 rounded-full bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center group-hover:bg-emerald-100 dark:group-hover:bg-emerald-500/20 text-zinc-400 group-hover:text-emerald-600 transition-colors">
+                                    <Plus className="w-7 h-7" />
                                 </div>
-                            )}
+                                <div className="text-center">
+                                    <span className="block text-sm font-bold text-zinc-600 dark:text-zinc-300 group-hover:text-emerald-700">Yeni Ürün Ekle</span>
+                                    <span className="block text-[11px] text-zinc-400 mt-1">Bu kategoriye ürün ekleyin</span>
+                                </div>
+                            </button>
                         </div>
                     ) : (
                         <div className="py-20 text-center text-zinc-500 border rounded-xl bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-inner">
