@@ -48,6 +48,7 @@ export default function AdminMenuPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState<string[]>([]);
     const [isSearching, setIsSearching] = useState(false);
+    const searchAbortRef = useRef<AbortController | null>(null);
     // Auto-search effect when product name changes
     useEffect(() => {
         // Only trigger if we have a name, dialog is open, and it's long enough
@@ -279,47 +280,35 @@ export default function AdminMenuPage() {
         const cleanQuery = query.trim();
         if (!cleanQuery) return;
 
+        // Cancel any previous in-flight search
+        if (searchAbortRef.current) {
+            searchAbortRef.current.abort();
+        }
+        const abortController = new AbortController();
+        searchAbortRef.current = abortController;
+
         setIsSearching(true);
         setSearchResults([]);
-        const currentSearchId = Date.now();
-        (window as any)._lastSearchId = currentSearchId;
 
         try {
-            // Use our server-side proxy API to search Google Images
-            // The server handles headers and avoids CORS issues
-            const res = await fetch(`/api/image-search?q=${encodeURIComponent(cleanQuery + " yemek")}`);
+            const url = `/api/image-search?q=${encodeURIComponent(cleanQuery)}`;
+            const res = await fetch(url, { signal: abortController.signal });
 
-            if ((window as any)._lastSearchId !== currentSearchId) return;
+            if (!res.ok) throw new Error(`API error: ${res.status}`);
 
-            if (res.ok) {
-                const data = await res.json();
-                if (data.images && data.images.length > 0) {
-                    setSearchResults(data.images);
-                    setIsSearching(false);
-                    return;
-                }
+            const data = await res.json();
+
+            if (data.images && Array.isArray(data.images) && data.images.length > 0) {
+                setSearchResults(data.images);
+            } else {
+                setSearchResults([]);
             }
-
-            // Fallback: try without "yemek" suffix
-            const res2 = await fetch(`/api/image-search?q=${encodeURIComponent(cleanQuery)}`);
-            if ((window as any)._lastSearchId !== currentSearchId) return;
-
-            if (res2.ok) {
-                const data2 = await res2.json();
-                if (data2.images && data2.images.length > 0) {
-                    setSearchResults(data2.images);
-                    setIsSearching(false);
-                    return;
-                }
-            }
-
-            // If still no results, show empty
-            setSearchResults([]);
-        } catch (error) {
+        } catch (error: any) {
+            if (error?.name === "AbortError") return; // Ignore aborted requests
             console.error("Image search error:", error);
             setSearchResults([]);
         } finally {
-            if ((window as any)._lastSearchId === currentSearchId) {
+            if (!abortController.signal.aborted) {
                 setIsSearching(false);
             }
         }
