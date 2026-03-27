@@ -765,7 +765,13 @@ export default function AdminMenuPage() {
                                                     onClick={() => setProductForm(prev => ({ ...prev, imageUrl: imgUrl }))}
                                                     className={`aspect-square cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${productForm.imageUrl === imgUrl ? "border-emerald-500 shadow-md scale-95" : "border-transparent hover:border-zinc-300 dark:hover:border-zinc-700"}`}
                                                 >
-                                                    <img src={imgUrl} alt="Sonuç" className="w-full h-full object-cover" />
+                                                    <img
+                                                        src={`/api/image-proxy?url=${encodeURIComponent(imgUrl)}`}
+                                                        alt="Sonuç"
+                                                        className="w-full h-full object-cover"
+                                                        loading="lazy"
+                                                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                                    />
                                                 </div>
                                             ))}
                                         </div>
@@ -781,7 +787,11 @@ export default function AdminMenuPage() {
                                     {/* Preview selected web image */}
                                     {productForm.imageUrl && productForm.imageUrl.startsWith("http") && (
                                         <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800 flex items-center gap-3">
-                                            <img src={productForm.imageUrl} className="w-12 h-12 rounded object-cover border border-zinc-200 dark:border-zinc-700" alt="Seçilen" />
+                                            <img
+                                                src={`/api/image-proxy?url=${encodeURIComponent(productForm.imageUrl)}`}
+                                                className="w-12 h-12 rounded object-cover border border-zinc-200 dark:border-zinc-700"
+                                                alt="Seçilen"
+                                            />
                                             <div className="flex-1 text-xs text-emerald-600 dark:text-emerald-400 font-medium">✨ Görsel seçildi</div>
                                             <Button variant="ghost" size="sm" className="h-7 px-2 text-red-500 hover:text-red-600" onClick={() => setProductForm(prev => ({ ...prev, imageUrl: "" }))}>Kaldır</Button>
                                         </div>
