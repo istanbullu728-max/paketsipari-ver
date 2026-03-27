@@ -3,11 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/**
- * Server-side image search proxy.
- * Uses DuckDuckGo Image Search (free, no API key required).
- * Falls back to Wikimedia Commons if DuckDuckGo fails.
- */
 export async function GET(request: NextRequest) {
     const query = request.nextUrl.searchParams.get("q");
     if (!query || !query.trim()) {
@@ -16,101 +11,117 @@ export async function GET(request: NextRequest) {
 
     const cleanQuery = query.trim();
 
-    // Strategy 1: DuckDuckGo Images (reliable, no key, returns real web images)
-    const ddgResult = await searchDuckDuckGo(cleanQuery);
-    if (ddgResult.length >= 3) {
-        return NextResponse.json({ images: ddgResult, source: "duckduckgo" });
+    // Run all search strategies in parallel, take whichever returns first with results
+    const [ddgResult, wikiResult, googleResult] = await Promise.allSettled([
+        searchDuckDuckGo(cleanQuery),
+        searchWikimedia(cleanQuery),
+        searchGoogleImages(cleanQuery),
+    ]);
+
+    const ddg = ddgResult.status === "fulfilled" ? ddgResult.value : [];
+    const wiki = wikiResult.status === "fulfilled" ? wikiResult.value : [];
+    const google = googleResult.status === "fulfilled" ? googleResult.value : [];
+
+    // Merge and deduplicate, prefer DuckDuckGo which has most realistic food images
+    const seen = new Set<string>();
+    const combined: string[] = [];
+
+    for (const url of [...ddg, ...google, ...wiki]) {
+        if (!seen.has(url) && combined.length < 15) {
+            seen.add(url);
+            combined.push(url);
+        }
     }
 
-    // Strategy 2: Google Images scraping
-    const googleResult = await searchGoogleImages(cleanQuery);
-    if (googleResult.length >= 3) {
-        return NextResponse.json({ images: googleResult, source: "google" });
-    }
+    const source = ddg.length > 0 ? "duckduckgo" : google.length > 0 ? "google" : "wikimedia";
 
-    // Strategy 3: Wikimedia Commons (very reliable, usually finds food images)
-    const wikiResult = await searchWikimedia(cleanQuery);
-    if (wikiResult.length >= 1) {
-        return NextResponse.json({ images: wikiResult, source: "wikimedia" });
-    }
-
-    // Combine whatever we have
-    const combined = [...ddgResult, ...googleResult, ...wikiResult];
-    return NextResponse.json({ images: combined, source: "mixed" });
+    return NextResponse.json({
+        images: combined,
+        source,
+        counts: { duckduckgo: ddg.length, google: google.length, wikimedia: wiki.length },
+    });
 }
 
 async function searchDuckDuckGo(query: string): Promise<string[]> {
     try {
-        // Step 1: Get the vqd token from DuckDuckGo
-        const initRes = await fetch(
+        // Get home page to extract vqd token
+        const homeRes = await fetch(
             `https://duckduckgo.com/?q=${encodeURIComponent(query)}&iax=images&ia=images`,
             {
                 headers: {
                     "User-Agent":
-                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+                        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
                     "Accept-Language": "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7",
                     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                    "Cache-Control": "no-cache",
                 },
-                // 8 second timeout
-                signal: AbortSignal.timeout(8000),
+                signal: AbortSignal.timeout(7000),
             }
         );
 
-        if (!initRes.ok) return [];
+        if (!homeRes.ok) return [];
+        const html = await homeRes.text();
 
-        const html = await initRes.text();
+        // Multiple vqd extraction patterns
+        let vqd = "";
+        const patterns = [
+            /vqd=['"]([^'"]{10,})['"]/,
+            /vqd=([0-9-]+)/,
+            /"vqd":"([^"]+)"/,
+        ];
+        for (const pattern of patterns) {
+            const m = html.match(pattern);
+            if (m) { vqd = m[1]; break; }
+        }
 
-        // Extract vqd token
-        const vqdMatch = html.match(/vqd=['"]([^'"]+)['"]/);
-        if (!vqdMatch) return [];
-        const vqd = vqdMatch[1];
+        if (!vqd) {
+            console.warn("[ddg] Could not extract vqd token");
+            return [];
+        }
 
-        // Step 2: Fetch the actual image results
+        // Fetch image results
         const imgRes = await fetch(
             `https://duckduckgo.com/i.js?l=tr-tr&o=json&q=${encodeURIComponent(query)}&vqd=${encodeURIComponent(vqd)}&f=,,,,,&p=1`,
             {
                 headers: {
                     "User-Agent":
-                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+                        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
                     "Referer": "https://duckduckgo.com/",
                     "Accept": "application/json, text/javascript, */*; q=0.01",
                     "Accept-Language": "tr-TR,tr;q=0.9",
                     "X-Requested-With": "XMLHttpRequest",
                 },
-                signal: AbortSignal.timeout(8000),
+                signal: AbortSignal.timeout(7000),
             }
         );
 
         if (!imgRes.ok) return [];
 
         const data = await imgRes.json();
-        if (!data.results || !Array.isArray(data.results)) return [];
+        if (!data?.results?.length) return [];
 
-        const urls: string[] = data.results
-            .slice(0, 15)
+        return data.results
+            .slice(0, 12)
             .map((r: any) => r.image)
-            .filter((url: any) => typeof url === "string" && url.startsWith("http"));
-
-        return urls;
+            .filter((u: any) => typeof u === "string" && u.startsWith("http"));
     } catch (err) {
-        console.error("[image-search] DuckDuckGo error:", err);
+        console.error("[ddg]", (err as Error).message);
         return [];
     }
 }
 
 async function searchGoogleImages(query: string): Promise<string[]> {
     try {
-        const url = `https://www.google.com/search?q=${encodeURIComponent(query)}&tbm=isch&hl=tr&gl=tr&safe=off`;
-
+        const url = `https://www.google.com/search?q=${encodeURIComponent(query)}&tbm=isch&hl=tr&gl=tr&safe=off&num=20`;
         const res = await fetch(url, {
             headers: {
                 "User-Agent":
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+                    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
                 "Accept-Language": "tr-TR,tr;q=0.9",
                 "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
                 "Referer": "https://www.google.com/",
             },
-            signal: AbortSignal.timeout(8000),
+            signal: AbortSignal.timeout(7000),
         });
 
         if (!res.ok) return [];
@@ -118,47 +129,43 @@ async function searchGoogleImages(query: string): Promise<string[]> {
 
         const urls: string[] = [];
 
-        // Extract "ou" (original url) from Google's AF_initDataCallback JSON blobs
+        // Extract "ou" (original url) from Google's embedded JSON
         const ouPattern = /"ou":"(https?:[^"]+)"/g;
         let match;
         while ((match = ouPattern.exec(html)) !== null && urls.length < 12) {
-            try {
-                const rawUrl = match[1]
-                    .replace(/\\u003d/g, "=")
-                    .replace(/\\u0026/g, "&")
-                    .replace(/\\/g, "");
-                if (rawUrl && rawUrl.startsWith("http") && !rawUrl.includes("google.com")) {
-                    urls.push(rawUrl);
-                }
-            } catch {}
+            const rawUrl = match[1]
+                .replace(/\\u003d/g, "=")
+                .replace(/\\u0026/g, "&")
+                .replace(/\\\//g, "/");
+            if (rawUrl.startsWith("http") && !rawUrl.includes("google.com")) {
+                urls.push(rawUrl);
+            }
         }
 
         return urls;
     } catch (err) {
-        console.error("[image-search] Google error:", err);
+        console.error("[google]", (err as Error).message);
         return [];
     }
 }
 
 async function searchWikimedia(query: string): Promise<string[]> {
     try {
-        const wikiUrl = `https://commons.wikimedia.org/w/api.php?action=query&format=json&prop=imageinfo&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrnamespace=6&iiprop=url&gsrlimit=12&origin=*`;
-
-        const res = await fetch(wikiUrl, {
-            signal: AbortSignal.timeout(8000),
-        });
+        const res = await fetch(
+            `https://commons.wikimedia.org/w/api.php?action=query&format=json&prop=imageinfo&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrnamespace=6&iiprop=url&gsrlimit=15&iiurlwidth=600&origin=*`,
+            { signal: AbortSignal.timeout(6000) }
+        );
 
         if (!res.ok) return [];
-
         const data = await res.json();
         const pages = data.query?.pages || {};
-        const urls: string[] = Object.values(pages)
-            .map((p: any) => p.imageinfo?.[0]?.url)
-            .filter((u): u is string => typeof u === "string" && u.startsWith("http"));
 
-        return urls;
+        return Object.values(pages)
+            .map((p: any) => p.imageinfo?.[0]?.thumburl || p.imageinfo?.[0]?.url)
+            .filter((u): u is string => typeof u === "string" && u.startsWith("http"))
+            .slice(0, 12);
     } catch (err) {
-        console.error("[image-search] Wikimedia error:", err);
+        console.error("[wikimedia]", (err as Error).message);
         return [];
     }
 }
