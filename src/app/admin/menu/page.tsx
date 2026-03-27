@@ -48,24 +48,19 @@ export default function AdminMenuPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState<string[]>([]);
     const [isSearching, setIsSearching] = useState(false);
-    // Auto-search effect when product name changes and we are in search mode
+    // Auto-search effect when product name changes
     useEffect(() => {
         // Only trigger if we have a name, dialog is open, and it's long enough
         if (!isProductDialogOpen || !productForm.name || productForm.name.trim().length <= 2) return;
 
         const delayDebounceFn = setTimeout(() => {
-            if (searchQuery !== productForm.name) {
-                setSearchQuery(productForm.name);
-                // Trigger auto search directly
-                performImageSearch(productForm.name);
-                // Also switch mode to search if it wasn't already to show results instantly
-                if (imageMode !== "search") {
-                    setImageMode("search");
-                }
-            }
-        }, 600); // 600ms debounce
+            setSearchQuery(productForm.name);
+            setImageMode("search");
+            performImageSearch(productForm.name);
+        }, 700); // 700ms debounce
 
         return () => clearTimeout(delayDebounceFn);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [productForm.name, isProductDialogOpen]);
 
     const readFileAsDataUrl = (file: File): Promise<string> =>
@@ -289,92 +284,40 @@ export default function AdminMenuPage() {
         const currentSearchId = Date.now();
         (window as any)._lastSearchId = currentSearchId;
 
-        // Enhanced translation and refinement
-        let searchTerm = cleanQuery.toLowerCase();
-        const engQueryMap: Record<string, string> = {
-            "sufle": "chocolate souffle",
-            "adana": "adana kebab",
-            "kebap": "turkish kebab",
-            "döner": "doner kebab",
-            "dürüm": "turkish wrap",
-            "ayran": "turkish yogurt drink",
-            "lahmacun": "lahmacun turkish pizza",
-            "pide": "turkish pide",
-            "tatlı": "turkish dessert",
-            "künefe": "kunefe",
-            "porsiyon": "plate food",
-            "et": "meat dish",
-            "tavuk": "chicken dish",
-            "iskender": "iskender kebab",
-            "köfte": "meatballs turkish",
-            "çorba": "turkish soup",
-            "baklava": "baklava",
-            "içli köfte": "kibbeh turkish",
-            "salata": "turkish salad",
-            "meze": "turkish meze",
-            "kola": "coca cola",
-            "fanta": "fanta orange",
-            "su": "bottled water mineral",
-            "ayran": "ayran drink",
-            "şalgam": "turnip juice turkish"
-        };
-
-        for (const [tr, en] of Object.entries(engQueryMap)) {
-            if (searchTerm.includes(tr)) {
-                searchTerm = en;
-                break;
-            }
-        }
-        
-        if (!searchTerm.includes("food") && !searchTerm.includes("drink") && !searchTerm.includes("turkish")) {
-            searchTerm = `${searchTerm} food`;
-        }
-
         try {
-            // STRATEGY 1: Unsplash (High Quality)
-            // Note: NAPI is Unsplash internal API, might have CORS on some envs
-            // If CORS fails, we have Strategy 2.
-            const unsplashUrl = `https://unsplash.com/napi/search/photos?query=${encodeURIComponent(searchTerm)}&per_page=12`;
-            
-            try {
-                const res = await fetch(unsplashUrl);
-                if (res.ok) {
-                    const data = await res.json();
-                    if ((window as any)._lastSearchId !== currentSearchId) return;
-                    if (data.results && data.results.length > 0) {
-                        setSearchResults(data.results.map((r: any) => r.urls.regular));
-                        setIsSearching(false);
-                        return;
-                    }
-                }
-            } catch (e) {
-                console.warn("Unsplash fetch failed, trying Wikimedia...");
-            }
+            // Use our server-side proxy API to search Google Images
+            // The server handles headers and avoids CORS issues
+            const res = await fetch(`/api/image-search?q=${encodeURIComponent(cleanQuery + " yemek")}`);
 
-            // STRATEGY 2: Wikimedia Commons (Highly reliable, no key, CORS friendly)
-            const wikiUrl = `https://commons.wikimedia.org/w/api.php?action=query&format=json&prop=imageinfo&generator=search&gsrsearch=${encodeURIComponent(searchTerm)}&gsrnamespace=6&iiprop=url&gsrlimit=12&origin=*`;
-            const wikiRes = await fetch(wikiUrl);
-            if (wikiRes.ok) {
-                const wikiData = await wikiRes.json();
-                if ((window as any)._lastSearchId !== currentSearchId) return;
-                const pages = wikiData.query?.pages || {};
-                const urls = Object.values(pages).map((p: any) => p.imageinfo?.[0]?.url).filter(Boolean);
-                if (urls.length > 0) {
-                    setSearchResults(urls);
+            if ((window as any)._lastSearchId !== currentSearchId) return;
+
+            if (res.ok) {
+                const data = await res.json();
+                if (data.images && data.images.length > 0) {
+                    setSearchResults(data.images);
                     setIsSearching(false);
                     return;
                 }
             }
 
-            // STRATEGY 3: LoremFlickr (Always works)
-            const fallbackResults = [];
-            for(let i=1; i<=9; i++) {
-                fallbackResults.push(`https://loremflickr.com/800/600/${encodeURIComponent(cleanQuery.replace(/\s+/g, ','))},food?lock=${i}`);
-            }
-            setSearchResults(fallbackResults);
+            // Fallback: try without "yemek" suffix
+            const res2 = await fetch(`/api/image-search?q=${encodeURIComponent(cleanQuery)}`);
+            if ((window as any)._lastSearchId !== currentSearchId) return;
 
+            if (res2.ok) {
+                const data2 = await res2.json();
+                if (data2.images && data2.images.length > 0) {
+                    setSearchResults(data2.images);
+                    setIsSearching(false);
+                    return;
+                }
+            }
+
+            // If still no results, show empty
+            setSearchResults([]);
         } catch (error) {
-            console.error("Master search error:", error);
+            console.error("Image search error:", error);
+            setSearchResults([]);
         } finally {
             if ((window as any)._lastSearchId === currentSearchId) {
                 setIsSearching(false);
