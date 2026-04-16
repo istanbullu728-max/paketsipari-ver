@@ -416,8 +416,8 @@ export default function AdminMenuPage() {
                     </div>
                 </div>
 
-                <div className="space-y-4">
-                <Reorder.Group axis="y" values={draftData.categories} onReorder={handleReorderCategories} className="space-y-4">
+                <div className="space-y-2.5">
+                <Reorder.Group axis="y" values={draftData.categories} onReorder={handleReorderCategories} className="space-y-2.5">
                     {draftData.categories.map((category) => {
                         const isExpanded = expandedCategoryIds.includes(category.id);
                         const categoryProducts = draftData.products.filter(p => p.categoryId === category.id);
@@ -429,10 +429,10 @@ export default function AdminMenuPage() {
                                 dragListener={isSorting}
                                 className="list-none"
                             >
-                                <Card className={`overflow-hidden border-zinc-200 dark:border-zinc-800 shadow-sm bg-white dark:bg-zinc-950 transition-all duration-200 group/cat-card ${isExpanded ? 'ring-1 ring-indigo-600/5' : ''}`}>
+                                <Card className={`overflow-hidden border-zinc-200 dark:border-zinc-800 shadow-sm bg-white dark:bg-zinc-950 transition-all duration-200 group/cat-card ${isExpanded ? 'ring-1 ring-indigo-600/10' : ''} rounded-lg`}>
                                     {/* Category Header */}
                                     <div 
-                                        className={`flex items-center justify-between p-3.5 cursor-pointer select-none ${isExpanded ? 'bg-zinc-50/20 dark:bg-zinc-900/10 border-b border-zinc-100 dark:border-zinc-800/60' : ''}`}
+                                        className={`flex items-center justify-between p-2 cursor-pointer select-none ${isExpanded ? 'bg-zinc-50/20 dark:bg-zinc-900/10 border-b border-zinc-100 dark:border-zinc-800/60' : ''}`}
                                         onClick={() => {
                                             if (isSorting) return;
                                             setExpandedCategoryIds(prev => 
@@ -442,9 +442,9 @@ export default function AdminMenuPage() {
                                             );
                                         }}
                                     >
-                                        <div className="flex items-center gap-4 flex-1">
-                                            <div className={`p-1.5 transition-colors opacity-40 group-hover/cat-card:opacity-100 ${isSorting ? 'text-indigo-600 cursor-grab active:cursor-grabbing' : 'text-zinc-400'}`}>
-                                                <svg width="12" height="18" viewBox="0 0 12 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <div className="flex items-center gap-3 flex-1">
+                                            <div className={`p-1 transition-colors opacity-40 group-hover/cat-card:opacity-100 ${isSorting ? 'text-indigo-600' : 'text-zinc-400'}`}>
+                                                <svg width="10" height="14" viewBox="0 0 12 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                     <circle cx="3" cy="3" r="1.5" fill="currentColor" />
                                                     <circle cx="3" cy="9" r="1.5" fill="currentColor" />
                                                     <circle cx="3" cy="15" r="1.5" fill="currentColor" />
@@ -453,9 +453,9 @@ export default function AdminMenuPage() {
                                                     <circle cx="9" cy="15" r="1.5" fill="currentColor" />
                                                 </svg>
                                             </div>
-                                            <div className="flex items-center gap-3">
-                                                <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">{category.name}</h3>
-                                                <span className="flex items-center justify-center bg-zinc-100/80 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 font-bold px-1.5 py-0.5 rounded text-[10px] min-w-[18px]">
+                                            <div className="flex items-center gap-2">
+                                                <h3 className="text-[15px] font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">{category.name}</h3>
+                                                <span className="flex items-center justify-center bg-zinc-100/80 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 font-bold px-1.5 py-0.5 rounded text-[9px] min-w-[16px]">
                                                     {categoryProducts.length}
                                                 </span>
                                             </div>
@@ -465,9 +465,9 @@ export default function AdminMenuPage() {
                                             {!isSorting && (
                                                 <>
                                                     <Button 
-                                                        variant="outline" 
+                                                        variant="link" 
                                                         size="sm" 
-                                                        className="h-8 px-3 text-[11px] font-bold border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded-lg"
+                                                        className="h-7 px-2 text-[10px] font-bold text-indigo-600 hover:text-indigo-700 decoration-indigo-600/30"
                                                         onClick={() => {
                                                             setSelectedCategoryId(category.id);
                                                             setEditingProduct(null);
@@ -475,13 +475,13 @@ export default function AdminMenuPage() {
                                                             setIsProductDialogOpen(true);
                                                         }}
                                                     >
-                                                        <Plus className="w-3.5 h-3.5 mr-1.5 text-indigo-600" /> Ürün Ekle
+                                                        <Plus className="w-3 h-3 mr-1" /> Ürün Ekle
                                                     </Button>
 
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" size="icon" className="h-9 w-9 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 rounded-lg">
-                                                                <MoreVertical className="w-5 h-5" />
+                                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 rounded-md">
+                                                                <MoreVertical className="w-4 h-4" />
                                                             </Button>
                                                         </DropdownMenuTrigger>
                                                         <DropdownMenuContent align="end" className="w-40">
@@ -498,7 +498,7 @@ export default function AdminMenuPage() {
                                                     </DropdownMenu>
 
                                                     <div className={`transition-transform duration-300 text-zinc-400 ${isExpanded ? 'rotate-180' : ''}`}>
-                                                        <ChevronDown className="w-4 h-4" />
+                                                        <ChevronDown className="w-3 h-3" />
                                                     </div>
                                                 </>
                                             )}
