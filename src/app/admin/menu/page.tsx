@@ -357,12 +357,12 @@ export default function AdminMenuPage() {
     const siteUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/${draftData.slug}`;
 
     return (
-        <div className="space-y-8 max-w-6xl mx-auto pb-20">
+        <div className="space-y-6 max-w-5xl mx-auto pb-20">
             {/* Header Section from Screenshot */}
-            <div className="space-y-6">
+            <div className="space-y-4">
                 <div>
-                    <h1 className="text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-white">Dijital Menü Yönetimi</h1>
-                    <p className="text-zinc-500 mt-2 text-lg">Menünüzü, kampanyalarınızı ve restoran bilgilerinizi tek yerden yönetin.</p>
+                    <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-white">Dijital Menü Yönetimi</h1>
+                    <p className="text-zinc-500 mt-1.5 text-base">Menünüzü, kampanyalarınızı ve restoran bilgilerinizi tek yerden yönetin.</p>
                 </div>
                 
                 {/* Horizontal Tabs */}
@@ -374,10 +374,10 @@ export default function AdminMenuPage() {
                                 ? 'text-zinc-900 dark:text-white' 
                                 : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'}`}
                         >
-                            <span className="flex items-center gap-2">
-                                {tab.id === 'menu' && <ListPlus className="w-4 h-4" />}
-                                {tab.id === 'campaigns' && <Rocket className="w-4 h-4" />}
-                                {tab.id === 'settings' && <Settings2 className="w-4 h-4" />}
+                            <span className="flex items-center gap-2 text-[13px]">
+                                {tab.id === 'menu' && <ListPlus className="w-3.5 h-3.5" />}
+                                {tab.id === 'campaigns' && <Rocket className="w-3.5 h-3.5" />}
+                                {tab.id === 'settings' && <Settings2 className="w-3.5 h-3.5" />}
                                 {tab.name}
                             </span>
                             {tab.active && (
@@ -392,24 +392,24 @@ export default function AdminMenuPage() {
             </div>
 
             <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                        <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">Kategoriler</h2>
+                        <h2 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white">Kategoriler</h2>
                     </div>
-                    <div className="flex flex-wrap gap-3">
+                    <div className="flex flex-wrap gap-2">
                         <Button 
                             variant={isSorting ? "default" : "outline"} 
-                            className={`h-10 px-5 font-semibold shadow-sm transition-all rounded-lg ${isSorting ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300'}`}
+                            className={`h-9 px-4 text-xs font-semibold shadow-sm transition-all rounded-lg ${isSorting ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300'}`}
                             onClick={() => setIsSorting(!isSorting)}
                         >
-                            <ArrowUpDown className="w-4 h-4 mr-2" /> {isSorting ? "Sıralamayı Tamamla" : "Sırala"}
+                            <ArrowUpDown className="w-3.5 h-3.5 mr-2" /> {isSorting ? "Tamamla" : "Sırala"}
                         </Button>
                         {!isSorting && (
                             <Button 
                                 onClick={() => { setEditingCategory(null); setCategoryName(""); setIsCategoryDialogOpen(true); }}
-                                className="h-10 px-5 font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/20 transition-all rounded-lg ring-1 ring-indigo-500/10"
+                                className="h-9 px-4 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/20 transition-all rounded-lg"
                             >
-                                <Plus className="w-5 h-5 mr-2" /> Kategori Ekle
+                                <Plus className="w-4 h-4 mr-2" /> Kategori Ekle
                             </Button>
                         )}
                     </div>
@@ -428,10 +428,10 @@ export default function AdminMenuPage() {
                                 dragListener={isSorting}
                                 className="list-none"
                             >
-                                <Card className={`overflow-hidden border-zinc-200 dark:border-zinc-800 shadow-sm bg-white dark:bg-zinc-950 transition-all duration-200 group/cat-card ${isExpanded ? 'ring-1 ring-zinc-200 dark:ring-zinc-800' : ''}`}>
+                                <Card className={`overflow-hidden border-zinc-200 dark:border-zinc-800 shadow-sm bg-white dark:bg-zinc-950 transition-all duration-200 group/cat-card ${isExpanded ? 'ring-1 ring-indigo-600/5' : ''}`}>
                                     {/* Category Header */}
                                     <div 
-                                        className={`flex items-center justify-between p-4 cursor-pointer select-none ${isExpanded ? 'bg-zinc-50/30 dark:bg-zinc-900/10 border-b border-zinc-100 dark:border-zinc-800' : ''}`}
+                                        className={`flex items-center justify-between p-3.5 cursor-pointer select-none ${isExpanded ? 'bg-zinc-50/20 dark:bg-zinc-900/10 border-b border-zinc-100 dark:border-zinc-800/60' : ''}`}
                                         onClick={() => {
                                             if (isSorting) return;
                                             setExpandedCategoryIds(prev => 
@@ -453,8 +453,8 @@ export default function AdminMenuPage() {
                                                 </svg>
                                             </div>
                                             <div className="flex items-center gap-3">
-                                                <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">{category.name}</h3>
-                                                <span className="flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 font-bold px-2 py-0.5 rounded-full text-[11px] min-w-[20px]">
+                                                <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">{category.name}</h3>
+                                                <span className="flex items-center justify-center bg-zinc-100/80 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 font-bold px-1.5 py-0.5 rounded text-[10px] min-w-[18px]">
                                                     {categoryProducts.length}
                                                 </span>
                                             </div>
@@ -466,7 +466,7 @@ export default function AdminMenuPage() {
                                                     <Button 
                                                         variant="outline" 
                                                         size="sm" 
-                                                        className="h-9 px-4 font-bold border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded-lg shadow-sm"
+                                                        className="h-8 px-3 text-[11px] font-bold border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded-lg"
                                                         onClick={() => {
                                                             setSelectedCategoryId(category.id);
                                                             setEditingProduct(null);
@@ -474,7 +474,7 @@ export default function AdminMenuPage() {
                                                             setIsProductDialogOpen(true);
                                                         }}
                                                     >
-                                                        <Plus className="w-4 h-4 mr-2 text-indigo-600" /> Ürün Ekle
+                                                        <Plus className="w-3.5 h-3.5 mr-1.5 text-indigo-600" /> Ürün Ekle
                                                     </Button>
 
                                                     <DropdownMenu>
@@ -513,51 +513,53 @@ export default function AdminMenuPage() {
                                                 exit={{ height: 0, opacity: 0 }}
                                                 transition={{ duration: 0.2 }}
                                             >
-                                                <div className="py-2 space-y-px bg-white dark:bg-zinc-950 divide-y divide-zinc-50 dark:divide-zinc-900/50">
-                                                    {categoryProducts.map((product) => (
-                                                        <div 
-                                                            key={product.id}
-                                                            className="group flex items-center justify-between p-4 hover:bg-zinc-50/50 dark:hover:bg-zinc-900/30 transition-all"
-                                                        >
-                                                            <div className="flex items-center gap-5 flex-1 min-w-0">
-                                                                <div className="w-16 h-16 rounded-xl bg-zinc-100 dark:bg-zinc-900 overflow-hidden flex-shrink-0 border border-zinc-100 dark:border-zinc-800 shadow-sm font-bold flex items-center justify-center">
-                                                                    {product.imageUrl ? (
-                                                                        <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
-                                                                    ) : (
-                                                                        <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-900/50">
-                                                                            <ImageIcon className="w-5 h-5 text-zinc-300 mb-0.5" />
-                                                                            <span className="text-[8px] text-zinc-300 uppercase font-black">Görsel</span>
+                                                <div className="p-3 space-y-2 bg-white dark:bg-zinc-950">
+                                                    <div className="grid grid-cols-1 gap-2">
+                                                        {categoryProducts.map((product) => (
+                                                            <div 
+                                                                key={product.id}
+                                                                className="group flex items-center justify-between p-2.5 rounded-lg bg-zinc-50/50 dark:bg-zinc-900/30 border border-zinc-100/50 dark:border-zinc-800/40 hover:border-indigo-600/10 hover:bg-indigo-50/5 dark:hover:bg-indigo-900/5 transition-all"
+                                                            >
+                                                                <div className="flex items-center gap-4 flex-1 min-w-0">
+                                                                    <div className="w-14 h-14 rounded-lg bg-zinc-100 dark:bg-zinc-900 overflow-hidden flex-shrink-0 border border-zinc-100 dark:border-zinc-800 shadow-sm font-bold flex items-center justify-center">
+                                                                        {product.imageUrl ? (
+                                                                            <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                                                                        ) : (
+                                                                            <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-900/50">
+                                                                                <ImageIcon className="w-4 h-4 text-zinc-300 mb-0.5" />
+                                                                                <span className="text-[7px] text-zinc-300 uppercase font-black">Görsel</span>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="min-w-0 space-y-0.5">
+                                                                        <h4 className="font-bold text-zinc-900 dark:text-zinc-100 truncate text-[14px] tracking-tight">{product.name}</h4>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <p className="font-bold text-indigo-600 dark:text-indigo-400 text-[13px]">{product.price} ₺</p>
                                                                         </div>
-                                                                    )}
-                                                                </div>
-                                                                <div className="min-w-0 space-y-0.5">
-                                                                    <h4 className="font-bold text-zinc-900 dark:text-zinc-100 truncate text-[16px] tracking-tight">{product.name}</h4>
-                                                                    <div className="flex items-center gap-2">
-                                                                        <p className="font-bold text-zinc-700 dark:text-zinc-400 text-[15px]">{product.price} ₺</p>
                                                                     </div>
                                                                 </div>
-                                                            </div>
 
-                                                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                <Button 
-                                                                    variant="ghost" 
-                                                                    size="icon" 
-                                                                    className="h-9 w-9 text-zinc-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/10 rounded-lg"
-                                                                    onClick={() => openEditProduct(product)}
-                                                                >
-                                                                    <Edit className="w-4 h-4" />
-                                                                </Button>
-                                                                <Button 
-                                                                    variant="ghost" 
-                                                                    size="icon" 
-                                                                    className="h-9 w-9 text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg"
-                                                                    onClick={() => handleDeleteProduct(product.id)}
-                                                                >
-                                                                    <Trash2 className="w-4 h-4" />
-                                                                </Button>
+                                                                <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity pr-1">
+                                                                    <Button 
+                                                                        variant="ghost" 
+                                                                        size="icon" 
+                                                                        className="h-8 w-8 text-zinc-400 hover:text-indigo-600 hover:bg-white dark:hover:bg-zinc-800 rounded-lg shadow-sm border border-transparent hover:border-zinc-100 dark:hover:border-zinc-700"
+                                                                        onClick={() => openEditProduct(product)}
+                                                                    >
+                                                                        <Edit className="w-3.5 h-3.5" />
+                                                                    </Button>
+                                                                    <Button 
+                                                                        variant="ghost" 
+                                                                        size="icon" 
+                                                                        className="h-8 w-8 text-zinc-400 hover:text-red-600 hover:bg-white dark:hover:bg-zinc-800 rounded-lg shadow-sm border border-transparent hover:border-zinc-100 dark:hover:border-zinc-700"
+                                                                        onClick={() => handleDeleteProduct(product.id)}
+                                                                    >
+                                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                                    </Button>
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    ))}
+                                                        ))}
+                                                    </div>
                                                     {categoryProducts.length === 0 && (
                                                         <div className="py-12 text-center">
                                                             <div className="w-12 h-12 rounded-full bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center mx-auto mb-3">

@@ -73,13 +73,13 @@ export default function AdminSidebar() {
 
 
     const sidebarContent = (
-        <div className="flex flex-col h-full bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 transition-colors duration-300">
+        <div className="flex flex-col h-full bg-[#0F172A] border-r border-white/5 transition-colors duration-300">
             {/* Header */}
             <div className={`p-4 flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 ${isCollapsed ? "justify-center" : ""}`}>
                 {!isCollapsed && (
                     <div className="flex items-center gap-3 overflow-hidden">
                         <LogoOrAvatar />
-                        <span className="font-bold text-base truncate dark:text-zinc-100">{restaurantData.name}</span>
+                        <span className="font-bold text-base truncate text-white">{restaurantData.name}</span>
                     </div>
                 )}
                 {isCollapsed && <LogoOrAvatar />}
@@ -87,7 +87,7 @@ export default function AdminSidebar() {
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="hidden md:flex dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800 shrink-0"
+                    className="hidden md:flex text-zinc-400 hover:text-white hover:bg-white/10 shrink-0"
                     onClick={() => setIsCollapsed(!isCollapsed)}
                 >
                     <ChevronLeft className={`w-5 h-5 transition-transform duration-300 ${isCollapsed ? "rotate-180" : ""}`} />
@@ -104,14 +104,14 @@ export default function AdminSidebar() {
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors relative mb-1 ${isActive
-                                    ? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 font-medium"
-                                    : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-zinc-100"
+                                    ? "text-white bg-indigo-600 font-semibold shadow-lg shadow-indigo-600/20"
+                                    : "text-zinc-400 hover:bg-white/5 hover:text-white"
                                     } ${isCollapsed ? "justify-center" : ""}`}
                             >
-                                <item.icon className={`w-5 h-5 shrink-0 ${isActive ? "text-emerald-600 dark:text-emerald-400" : ""}`} />
-                                {!isCollapsed && <span>{item.name}</span>}
+                                <item.icon className={`w-5 h-5 shrink-0 ${isActive ? "text-white" : ""}`} />
+                                {!isCollapsed && <span className="text-[13px]">{item.name}</span>}
                                 {isActive && !isCollapsed && (
-                                    <motion.div layoutId="activeNav" className="absolute left-0 w-1 h-6 bg-emerald-500 rounded-r-full" />
+                                    <motion.div layoutId="activeNav" className="absolute left-0 w-1 h-6 bg-white rounded-r-full" />
                                 )}
                             </motion.div>
                         </Link>
