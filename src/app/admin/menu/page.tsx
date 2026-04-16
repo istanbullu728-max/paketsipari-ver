@@ -1,4 +1,5 @@
 "use client";
+// UI Update: Added Update button and cleaned up tabs
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useRestaurant } from "@/components/restaurant-provider";
