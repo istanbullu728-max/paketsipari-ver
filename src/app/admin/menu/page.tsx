@@ -359,35 +359,35 @@ export default function AdminMenuPage() {
     return (
         <div className="space-y-6 max-w-5xl mx-auto pb-20">
             {/* Header Section from Screenshot */}
-            <div className="space-y-4">
-                <div>
-                    <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-white">Dijital Menü Yönetimi</h1>
-                    <p className="text-zinc-500 mt-1.5 text-base">Menünüzü, kampanyalarınızı ve restoran bilgilerinizi tek yerden yönetin.</p>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 border-b border-zinc-100 dark:border-zinc-800 pb-6">
+                <div className="space-y-1.5">
+                    <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-white flex items-center gap-3">
+                        <UtensilsCrossed className="w-8 h-8 text-indigo-600" />
+                        Dijital Menü Yönetimi
+                    </h1>
+                    <p className="text-zinc-500 text-base max-w-lg">
+                        Menünüzdeki ürünleri ve kategorileri buradan düzenleyebilirsiniz. Değişikliklerin canlı sitede görünmesi için güncellemeyi unutmayın.
+                    </p>
                 </div>
                 
-                {/* Horizontal Tabs */}
-                <div className="flex items-center gap-1 border-b border-zinc-100 dark:border-zinc-800 pb-px">
-                    {navTabs.map((tab) => (
-                        <button
-                            key={tab.id}
-                            className={`px-6 py-3 text-sm font-semibold transition-all relative ${tab.active 
-                                ? 'text-zinc-900 dark:text-white' 
-                                : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'}`}
-                        >
-                            <span className="flex items-center gap-2 text-[13px]">
-                                {tab.id === 'menu' && <ListPlus className="w-3.5 h-3.5" />}
-                                {tab.id === 'campaigns' && <Rocket className="w-3.5 h-3.5" />}
-                                {tab.id === 'settings' && <Settings2 className="w-3.5 h-3.5" />}
-                                {tab.name}
-                            </span>
-                            {tab.active && (
-                                <motion.div 
-                                    layoutId="activeTab"
-                                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600"
-                                />
-                            )}
-                        </button>
-                    ))}
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <Button 
+                        onClick={handlePublish}
+                        disabled={isPublishing}
+                        className="flex-1 sm:flex-none h-11 px-8 bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-lg shadow-indigo-600/20 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                        {isPublishing ? (
+                            <>
+                                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                                Güncelleniyor...
+                            </>
+                        ) : (
+                            <>
+                                <CheckCircle2 className="w-5 h-5 mr-2" />
+                                Değişiklikleri Güncelle
+                            </>
+                        )}
+                    </Button>
                 </div>
             </div>
 
