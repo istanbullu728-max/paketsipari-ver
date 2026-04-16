@@ -330,14 +330,21 @@ export default function AdminMenuPage() {
 
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
-        // Basic feedback (in a real app, use a toast notification)
         const btn = document.getElementById('copy-btn');
         if (btn) {
             const originalText = btn.innerHTML;
             btn.innerHTML = 'Kopyalandı!';
-            setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+            setTimeout(() => { 
+                if (btn) btn.innerHTML = originalText; 
+            }, 2000);
         }
     };
+
+    const navTabs = [
+        { id: 'menu', name: 'Menü İçeriği', active: true },
+        { id: 'campaigns', name: 'Kampanyalar', active: false },
+        { id: 'settings', name: 'Restoran Bilgileri', active: false },
+    ];
 
     const handleReorderCategories = (newCategories: Category[]) => {
         const categoriesWithNewOrder = newCategories.map((cat, index) => ({
@@ -350,49 +357,65 @@ export default function AdminMenuPage() {
     const siteUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/${draftData.slug}`;
 
     return (
-        <div className="space-y-8 max-w-5xl mx-auto pb-20">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+        <div className="space-y-8 max-w-6xl mx-auto pb-20">
+            {/* Header Section from Screenshot */}
+            <div className="space-y-6">
                 <div>
-                    <h1 className="text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-white">Kategoriler</h1>
+                    <h1 className="text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-white">Dijital Menü Yönetimi</h1>
+                    <p className="text-zinc-500 mt-2 text-lg">Menünüzü, kampanyalarınızı ve restoran bilgilerinizi tek yerden yönetin.</p>
                 </div>
-                <div className="flex flex-wrap gap-3">
-                    <Button 
-                        variant={isSorting ? "default" : "outline"} 
-                        className={`h-11 px-6 font-semibold shadow-sm transition-all ${isSorting ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300'}`}
-                        onClick={() => setIsSorting(!isSorting)}
-                    >
-                        <ArrowUpDown className="w-4 h-4 mr-2" /> {isSorting ? "Tamamla" : "Sırala"}
-                    </Button>
-                    {!isSorting && (
-                        <Button 
-                            onClick={() => { setEditingCategory(null); setCategoryName(""); setIsCategoryDialogOpen(true); }}
-                            className="h-11 px-6 font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/20 transition-all"
+                
+                {/* Horizontal Tabs */}
+                <div className="flex items-center gap-1 border-b border-zinc-100 dark:border-zinc-800 pb-px">
+                    {navTabs.map((tab) => (
+                        <button
+                            key={tab.id}
+                            className={`px-6 py-3 text-sm font-semibold transition-all relative ${tab.active 
+                                ? 'text-zinc-900 dark:text-white' 
+                                : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'}`}
                         >
-                            <Plus className="w-5 h-5 mr-2" /> Kategori Ekle
-                        </Button>
-                    )}
-                    <Button
-                        onClick={handlePublish}
-                        disabled={isPublishing}
-                        variant="secondary"
-                        className="h-11 px-6 font-bold transition-all"
-                    >
-                        {isPublishing ? (
-                             <span className="flex items-center gap-2">
-                                <span className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                                Yayınlanıyor...
+                            <span className="flex items-center gap-2">
+                                {tab.id === 'menu' && <ListPlus className="w-4 h-4" />}
+                                {tab.id === 'campaigns' && <Rocket className="w-4 h-4" />}
+                                {tab.id === 'settings' && <Settings2 className="w-4 h-4" />}
+                                {tab.name}
                             </span>
-                        ) : (
-                            <>
-                                <Rocket className="w-4 h-4 mr-2" />
-                                Yayınla
-                            </>
-                        )}
-                    </Button>
+                            {tab.active && (
+                                <motion.div 
+                                    layoutId="activeTab"
+                                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600"
+                                />
+                            )}
+                        </button>
+                    ))}
                 </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+                    <div>
+                        <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">Kategoriler</h2>
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                        <Button 
+                            variant={isSorting ? "default" : "outline"} 
+                            className={`h-10 px-5 font-semibold shadow-sm transition-all rounded-lg ${isSorting ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300'}`}
+                            onClick={() => setIsSorting(!isSorting)}
+                        >
+                            <ArrowUpDown className="w-4 h-4 mr-2" /> {isSorting ? "Sıralamayı Tamamla" : "Sırala"}
+                        </Button>
+                        {!isSorting && (
+                            <Button 
+                                onClick={() => { setEditingCategory(null); setCategoryName(""); setIsCategoryDialogOpen(true); }}
+                                className="h-10 px-5 font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/20 transition-all rounded-lg ring-1 ring-indigo-500/10"
+                            >
+                                <Plus className="w-5 h-5 mr-2" /> Kategori Ekle
+                            </Button>
+                        )}
+                    </div>
+                </div>
+
+                <div className="space-y-4">
                 <Reorder.Group axis="y" values={draftData.categories} onReorder={handleReorderCategories} className="space-y-4">
                     {draftData.categories.map((category) => {
                         const isExpanded = expandedCategoryIds.includes(category.id);
@@ -405,10 +428,10 @@ export default function AdminMenuPage() {
                                 dragListener={isSorting}
                                 className="list-none"
                             >
-                                <Card className={`overflow-hidden border-zinc-200 dark:border-zinc-800 shadow-sm bg-white dark:bg-zinc-950 transition-all duration-200 ${isSorting ? 'ring-2 ring-indigo-500/20 border-indigo-200' : ''}`}>
+                                <Card className={`overflow-hidden border-zinc-200 dark:border-zinc-800 shadow-sm bg-white dark:bg-zinc-950 transition-all duration-200 group/cat-card ${isExpanded ? 'ring-1 ring-zinc-200 dark:ring-zinc-800' : ''}`}>
                                     {/* Category Header */}
                                     <div 
-                                        className={`flex items-center justify-between p-4 cursor-pointer select-none group/cat ${isExpanded ? 'bg-zinc-50/50 dark:bg-zinc-900/50 border-b border-zinc-100 dark:border-zinc-800' : ''}`}
+                                        className={`flex items-center justify-between p-4 cursor-pointer select-none ${isExpanded ? 'bg-zinc-50/30 dark:bg-zinc-900/10 border-b border-zinc-100 dark:border-zinc-800' : ''}`}
                                         onClick={() => {
                                             if (isSorting) return;
                                             setExpandedCategoryIds(prev => 
@@ -419,14 +442,21 @@ export default function AdminMenuPage() {
                                         }}
                                     >
                                         <div className="flex items-center gap-4 flex-1">
-                                            <div className={`p-2 transition-colors ${isSorting ? 'text-indigo-600 cursor-grab active:cursor-grabbing' : 'text-zinc-300 hover:text-zinc-500'}`}>
-                                                <GripVertical className="w-5 h-5" />
+                                            <div className={`p-1.5 transition-colors opacity-40 group-hover/cat-card:opacity-100 ${isSorting ? 'text-indigo-600 cursor-grab active:cursor-grabbing' : 'text-zinc-400'}`}>
+                                                <svg width="12" height="18" viewBox="0 0 12 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <circle cx="3" cy="3" r="1.5" fill="currentColor" />
+                                                    <circle cx="3" cy="9" r="1.5" fill="currentColor" />
+                                                    <circle cx="3" cy="15" r="1.5" fill="currentColor" />
+                                                    <circle cx="9" cy="3" r="1.5" fill="currentColor" />
+                                                    <circle cx="9" cy="9" r="1.5" fill="currentColor" />
+                                                    <circle cx="9" cy="15" r="1.5" fill="currentColor" />
+                                                </svg>
                                             </div>
                                             <div className="flex items-center gap-3">
-                                                <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">{category.name}</h3>
-                                                <Badge variant="secondary" className="bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 font-medium border-none px-2 rounded-full h-6 text-xs">
+                                                <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">{category.name}</h3>
+                                                <span className="flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 font-bold px-2 py-0.5 rounded-full text-[11px] min-w-[20px]">
                                                     {categoryProducts.length}
-                                                </Badge>
+                                                </span>
                                             </div>
                                         </div>
 
@@ -436,7 +466,7 @@ export default function AdminMenuPage() {
                                                     <Button 
                                                         variant="outline" 
                                                         size="sm" 
-                                                        className="h-9 px-4 font-semibold border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                                                        className="h-9 px-4 font-bold border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded-lg shadow-sm"
                                                         onClick={() => {
                                                             setSelectedCategoryId(category.id);
                                                             setEditingProduct(null);
@@ -444,12 +474,12 @@ export default function AdminMenuPage() {
                                                             setIsProductDialogOpen(true);
                                                         }}
                                                     >
-                                                        <Plus className="w-4 h-4 mr-2" /> Ürün Ekle
+                                                        <Plus className="w-4 h-4 mr-2 text-indigo-600" /> Ürün Ekle
                                                     </Button>
 
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" size="icon" className="h-9 w-9 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100">
+                                                            <Button variant="ghost" size="icon" className="h-9 w-9 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 rounded-lg">
                                                                 <MoreVertical className="w-5 h-5" />
                                                             </Button>
                                                         </DropdownMenuTrigger>
@@ -466,8 +496,8 @@ export default function AdminMenuPage() {
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
 
-                                                    <div className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>
-                                                        <ChevronDown className="w-5 h-5 text-zinc-400" />
+                                                    <div className={`transition-transform duration-300 text-zinc-400 ${isExpanded ? 'rotate-180' : ''}`}>
+                                                        <ChevronDown className="w-4 h-4" />
                                                     </div>
                                                 </>
                                             )}
@@ -483,25 +513,28 @@ export default function AdminMenuPage() {
                                                 exit={{ height: 0, opacity: 0 }}
                                                 transition={{ duration: 0.2 }}
                                             >
-                                                <div className="p-2 space-y-1 bg-white dark:bg-zinc-950">
+                                                <div className="py-2 space-y-px bg-white dark:bg-zinc-950 divide-y divide-zinc-50 dark:divide-zinc-900/50">
                                                     {categoryProducts.map((product) => (
                                                         <div 
                                                             key={product.id}
-                                                            className="group flex items-center justify-between p-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-all border border-transparent hover:border-zinc-100 dark:hover:border-zinc-800"
+                                                            className="group flex items-center justify-between p-4 hover:bg-zinc-50/50 dark:hover:bg-zinc-900/30 transition-all"
                                                         >
-                                                            <div className="flex items-center gap-4 flex-1 min-w-0">
-                                                                <div className="w-16 h-16 rounded-xl bg-zinc-100 dark:bg-zinc-900 overflow-hidden flex-shrink-0 border border-zinc-100 dark:border-zinc-800">
+                                                            <div className="flex items-center gap-5 flex-1 min-w-0">
+                                                                <div className="w-16 h-16 rounded-xl bg-zinc-100 dark:bg-zinc-900 overflow-hidden flex-shrink-0 border border-zinc-100 dark:border-zinc-800 shadow-sm font-bold flex items-center justify-center">
                                                                     {product.imageUrl ? (
                                                                         <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
                                                                     ) : (
-                                                                        <div className="w-full h-full flex items-center justify-center">
-                                                                            <ImageIcon className="w-6 h-6 text-zinc-300" />
+                                                                        <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-900/50">
+                                                                            <ImageIcon className="w-5 h-5 text-zinc-300 mb-0.5" />
+                                                                            <span className="text-[8px] text-zinc-300 uppercase font-black">Görsel</span>
                                                                         </div>
                                                                     )}
                                                                 </div>
-                                                                <div className="min-w-0">
-                                                                    <h4 className="font-bold text-zinc-900 dark:text-zinc-100 truncate">{product.name}</h4>
-                                                                    <p className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mt-0.5">{product.price} ₺</p>
+                                                                <div className="min-w-0 space-y-0.5">
+                                                                    <h4 className="font-bold text-zinc-900 dark:text-zinc-100 truncate text-[16px] tracking-tight">{product.name}</h4>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <p className="font-bold text-zinc-700 dark:text-zinc-400 text-[15px]">{product.price} ₺</p>
+                                                                    </div>
                                                                 </div>
                                                             </div>
 
@@ -509,7 +542,7 @@ export default function AdminMenuPage() {
                                                                 <Button 
                                                                     variant="ghost" 
                                                                     size="icon" 
-                                                                    className="h-9 w-9 text-zinc-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/10"
+                                                                    className="h-9 w-9 text-zinc-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/10 rounded-lg"
                                                                     onClick={() => openEditProduct(product)}
                                                                 >
                                                                     <Edit className="w-4 h-4" />
@@ -517,7 +550,7 @@ export default function AdminMenuPage() {
                                                                 <Button 
                                                                     variant="ghost" 
                                                                     size="icon" 
-                                                                    className="h-9 w-9 text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10"
+                                                                    className="h-9 w-9 text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg"
                                                                     onClick={() => handleDeleteProduct(product.id)}
                                                                 >
                                                                     <Trash2 className="w-4 h-4" />
@@ -969,7 +1002,7 @@ export default function AdminMenuPage() {
                                 Kapat
                             </Button>
                             <Button
-                                className="w-full sm:flex-1 h-11 bg-primary hover:bg-primary/90 text-white font-bold"
+                                className="w-full sm:flex-1 h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-lg shadow-indigo-600/20"
                                 onClick={() => window.open(siteUrl, '_blank')}
                             >
                                 Siteyi Görüntüle
