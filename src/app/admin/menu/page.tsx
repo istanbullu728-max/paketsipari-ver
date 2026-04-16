@@ -8,8 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Edit, Trash2, Image as ImageIcon, Upload, X, Search, Rocket, CheckCircle2, ExternalLink, Copy, Globe, GripVertical, Settings2, ListPlus } from "lucide-react";
+import { Plus, Edit, Trash2, Image as ImageIcon, Upload, X, Search, Rocket, CheckCircle2, ExternalLink, Copy, Globe, GripVertical, Settings2, ListPlus, ChevronDown, ChevronUp, MoreVertical, ArrowUpDown } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 import { Reorder, AnimatePresence, motion } from "framer-motion";
 import { ProductVariation, ProductVariationOption } from "@/types";
 
@@ -19,6 +21,8 @@ export default function AdminMenuPage() {
     const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
     const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false);
     const [isPublishing, setIsPublishing] = useState(false);
+    const [expandedCategoryIds, setExpandedCategoryIds] = useState<string[]>([]);
+    const [isSorting, setIsSorting] = useState(false);
 
     // Category State
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -163,6 +167,12 @@ export default function AdminMenuPage() {
         setIsProductDialogOpen(false);
         setEditingProduct(null);
         setProductForm({ name: "", description: "", price: "", imageUrl: "", variations: [] });
+        
+        // Ensure the category is expanded after adding a product
+        if (!expandedCategoryIds.includes(selectedCategoryId)) {
+            setExpandedCategoryIds(prev => [...prev, selectedCategoryId]);
+        }
+        
         resetImageState();
     };
 
@@ -329,125 +339,236 @@ export default function AdminMenuPage() {
         }
     };
 
+    const handleReorderCategories = (newCategories: Category[]) => {
+        const categoriesWithNewOrder = newCategories.map((cat, index) => ({
+            ...cat,
+            orderIndex: index
+        }));
+        updateDraftData({ categories: categoriesWithNewOrder });
+    };
+
     const siteUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/${draftData.slug}`;
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="space-y-8 max-w-5xl mx-auto pb-20">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Menü Yönetimi</h1>
-                    <p className="text-zinc-500 mt-2">Taslak menünüzü düzenleyin. Değişikliklerin müşteriye yansıması için yayınlayın.</p>
+                    <h1 className="text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-white">Kategoriler</h1>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                    <Button variant="outline" onClick={() => { setEditingCategory(null); setCategoryName(""); setIsCategoryDialogOpen(true); }}>
-                        <Plus className="w-4 h-4 mr-2" /> Kategori
+                <div className="flex flex-wrap gap-3">
+                    <Button 
+                        variant={isSorting ? "default" : "outline"} 
+                        className={`h-11 px-6 font-semibold shadow-sm transition-all ${isSorting ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300'}`}
+                        onClick={() => setIsSorting(!isSorting)}
+                    >
+                        <ArrowUpDown className="w-4 h-4 mr-2" /> {isSorting ? "Tamamla" : "Sırala"}
                     </Button>
+                    {!isSorting && (
+                        <Button 
+                            onClick={() => { setEditingCategory(null); setCategoryName(""); setIsCategoryDialogOpen(true); }}
+                            className="h-11 px-6 font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/20 transition-all"
+                        >
+                            <Plus className="w-5 h-5 mr-2" /> Kategori Ekle
+                        </Button>
+                    )}
                     <Button
                         onClick={handlePublish}
                         disabled={isPublishing}
-                        className="bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all font-bold group"
+                        variant="secondary"
+                        className="h-11 px-6 font-bold transition-all"
                     >
                         {isPublishing ? (
-                            <span className="flex items-center gap-2">
-                                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                             <span className="flex items-center gap-2">
+                                <span className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
                                 Yayınlanıyor...
                             </span>
                         ) : (
                             <>
-                                <Rocket className="w-4 h-4 mr-2 group-hover:-translate-y-1 transition-transform" />
-                                Siteyi Yayınla
+                                <Rocket className="w-4 h-4 mr-2" />
+                                Yayınla
                             </>
                         )}
                     </Button>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
+            <div className="space-y-4">
+                <Reorder.Group axis="y" values={draftData.categories} onReorder={handleReorderCategories} className="space-y-4">
+                    {draftData.categories.map((category) => {
+                        const isExpanded = expandedCategoryIds.includes(category.id);
+                        const categoryProducts = draftData.products.filter(p => p.categoryId === category.id);
 
-                {/* Categories Column */}
-                <Card className="col-span-1 border-zinc-200 dark:border-zinc-800 shadow-sm bg-white dark:bg-zinc-950">
-                    <div className="p-4 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 rounded-t-xl font-semibold">
-                        Kategoriler
-                    </div>
-                    <div className="flex flex-col p-2 space-y-1">
-                        {draftData.categories.map((category) => (
-                            <div
-                                key={category.id}
-                                className={`group flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${selectedCategoryId === category.id ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 font-medium' : 'hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-600 dark:text-zinc-400'}`}
-                                onClick={() => setSelectedCategoryId(category.id)}
+                        return (
+                            <Reorder.Item 
+                                key={category.id} 
+                                value={category}
+                                dragListener={isSorting}
+                                className="list-none"
                             >
-                                <span className="flex-1 truncate pr-2">{category.name}</span>
-                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-zinc-400 hover:bg-zinc-200 hover:text-blue-600 dark:hover:bg-zinc-800 dark:hover:text-blue-400" onClick={(e) => { e.stopPropagation(); openEditCategory(category); }}>
-                                        <Edit className="w-3.5 h-3.5" />
-                                    </Button>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-zinc-400 hover:bg-zinc-200 hover:text-red-600 dark:hover:bg-zinc-800 dark:hover:text-red-400" onClick={(e) => { e.stopPropagation(); handleDeleteCategory(category.id); }}>
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                    </Button>
-                                </div>
-                            </div>
-                        ))}
-                        {draftData.categories.length === 0 && (
-                            <div className="text-xs text-center p-4 text-zinc-500">Kategori Bulunmuyor</div>
-                        )}
-                    </div>
-                </Card>
+                                <Card className={`overflow-hidden border-zinc-200 dark:border-zinc-800 shadow-sm bg-white dark:bg-zinc-950 transition-all duration-200 ${isSorting ? 'ring-2 ring-indigo-500/20 border-indigo-200' : ''}`}>
+                                    {/* Category Header */}
+                                    <div 
+                                        className={`flex items-center justify-between p-4 cursor-pointer select-none group/cat ${isExpanded ? 'bg-zinc-50/50 dark:bg-zinc-900/50 border-b border-zinc-100 dark:border-zinc-800' : ''}`}
+                                        onClick={() => {
+                                            if (isSorting) return;
+                                            setExpandedCategoryIds(prev => 
+                                                prev.includes(category.id) 
+                                                ? prev.filter(id => id !== category.id) 
+                                                : [...prev, category.id]
+                                            );
+                                        }}
+                                    >
+                                        <div className="flex items-center gap-4 flex-1">
+                                            <div className={`p-2 transition-colors ${isSorting ? 'text-indigo-600 cursor-grab active:cursor-grabbing' : 'text-zinc-300 hover:text-zinc-500'}`}>
+                                                <GripVertical className="w-5 h-5" />
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">{category.name}</h3>
+                                                <Badge variant="secondary" className="bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 font-medium border-none px-2 rounded-full h-6 text-xs">
+                                                    {categoryProducts.length}
+                                                </Badge>
+                                            </div>
+                                        </div>
 
-                {/* Products Grid */}
-                <div className="col-span-1 md:col-span-3">
-                    {selectedCategoryId ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {draftData.products.filter(p => p.categoryId === selectedCategoryId).map((product) => (
-                                <Card key={product.id} className="group overflow-hidden relative border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex flex-col hover:border-emerald-200 dark:hover:border-emerald-800 transition-colors">
-                                    <div className="h-32 bg-zinc-100 dark:bg-zinc-900 overflow-hidden relative border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-center">
-                                        {product.imageUrl ? (
-                                            <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
-                                        ) : (
-                                            <ImageIcon className="w-8 h-8 text-zinc-300" />
-                                        )}
-                                        {/* Actions overlay */}
-                                        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 backdrop-blur-sm p-1 rounded-lg">
-                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-white hover:bg-white/20" onClick={() => openEditProduct(product)}>
-                                                <Edit className="w-3.5 h-3.5" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-red-200 hover:text-red-100 hover:bg-red-500/50" onClick={() => handleDeleteProduct(product.id)}>
-                                                <Trash2 className="w-3.5 h-3.5" />
-                                            </Button>
+                                        <div className="flex items-center gap-3" onClick={e => e.stopPropagation()}>
+                                            {!isSorting && (
+                                                <>
+                                                    <Button 
+                                                        variant="outline" 
+                                                        size="sm" 
+                                                        className="h-9 px-4 font-semibold border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                                                        onClick={() => {
+                                                            setSelectedCategoryId(category.id);
+                                                            setEditingProduct(null);
+                                                            setProductForm({ name: "", description: "", price: "", imageUrl: "", variations: [] });
+                                                            setIsProductDialogOpen(true);
+                                                        }}
+                                                    >
+                                                        <Plus className="w-4 h-4 mr-2" /> Ürün Ekle
+                                                    </Button>
+
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" size="icon" className="h-9 w-9 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100">
+                                                                <MoreVertical className="w-5 h-5" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end" className="w-40">
+                                                            <DropdownMenuItem onClick={() => openEditCategory(category)}>
+                                                                <Edit className="w-4 h-4 mr-2" /> Düzenle
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem 
+                                                                className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/10"
+                                                                onClick={() => handleDeleteCategory(category.id)}
+                                                            >
+                                                                <Trash2 className="w-4 h-4 mr-2" /> Sil
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+
+                                                    <div className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>
+                                                        <ChevronDown className="w-5 h-5 text-zinc-400" />
+                                                    </div>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
-                                    <CardContent className="p-4 flex flex-col flex-1">
-                                        <div className="flex justify-between items-start mb-1">
-                                            <h3 className="font-bold text-zinc-900 dark:text-zinc-100 leading-tight line-clamp-2 pr-2">{product.name}</h3>
-                                            <span className="font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">{product.price} TL</span>
-                                        </div>
-                                        <p className="text-sm text-zinc-500 line-clamp-2 mt-1 flex-1">{product.description || "Açıklama yok"}</p>
-                                        {product.variations && product.variations.length > 0 && (
-                                            <span className="mt-3 text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 rounded w-fit">Seçenekler Var</span>
-                                        )}
-                                    </CardContent>
-                                </Card>
-                            ))}
 
-                            {/* Add Product Card */}
-                            <button
-                                onClick={() => { setEditingProduct(null); setProductForm({ name: "", description: "", price: "", imageUrl: "", variations: [] }); setIsProductDialogOpen(true); }}
-                                className="border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl p-4 flex flex-col items-center justify-center gap-3 min-h-[220px] hover:border-emerald-300 hover:bg-emerald-50/30 dark:hover:bg-emerald-500/5 transition-all group"
-                            >
-                                <div className="w-12 h-12 rounded-full bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center group-hover:bg-emerald-100 dark:group-hover:bg-emerald-500/20 text-zinc-400 group-hover:text-emerald-600 transition-colors">
-                                    <Plus className="w-7 h-7" />
-                                </div>
-                                <div className="text-center">
-                                    <span className="block text-sm font-bold text-zinc-600 dark:text-zinc-300 group-hover:text-emerald-700">Yeni Ürün Ekle</span>
-                                    <span className="block text-[11px] text-zinc-400 mt-1">Bu kategoriye ürün ekleyin</span>
-                                </div>
-                            </button>
+                                    {/* Products List (Accordion Content) */}
+                                    <AnimatePresence>
+                                        {!isSorting && isExpanded && (
+                                            <motion.div
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: "auto", opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                transition={{ duration: 0.2 }}
+                                            >
+                                                <div className="p-2 space-y-1 bg-white dark:bg-zinc-950">
+                                                    {categoryProducts.map((product) => (
+                                                        <div 
+                                                            key={product.id}
+                                                            className="group flex items-center justify-between p-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-all border border-transparent hover:border-zinc-100 dark:hover:border-zinc-800"
+                                                        >
+                                                            <div className="flex items-center gap-4 flex-1 min-w-0">
+                                                                <div className="w-16 h-16 rounded-xl bg-zinc-100 dark:bg-zinc-900 overflow-hidden flex-shrink-0 border border-zinc-100 dark:border-zinc-800">
+                                                                    {product.imageUrl ? (
+                                                                        <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                                                                    ) : (
+                                                                        <div className="w-full h-full flex items-center justify-center">
+                                                                            <ImageIcon className="w-6 h-6 text-zinc-300" />
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                <div className="min-w-0">
+                                                                    <h4 className="font-bold text-zinc-900 dark:text-zinc-100 truncate">{product.name}</h4>
+                                                                    <p className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mt-0.5">{product.price} ₺</p>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                <Button 
+                                                                    variant="ghost" 
+                                                                    size="icon" 
+                                                                    className="h-9 w-9 text-zinc-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/10"
+                                                                    onClick={() => openEditProduct(product)}
+                                                                >
+                                                                    <Edit className="w-4 h-4" />
+                                                                </Button>
+                                                                <Button 
+                                                                    variant="ghost" 
+                                                                    size="icon" 
+                                                                    className="h-9 w-9 text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10"
+                                                                    onClick={() => handleDeleteProduct(product.id)}
+                                                                >
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                </Button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                    {categoryProducts.length === 0 && (
+                                                        <div className="py-12 text-center">
+                                                            <div className="w-12 h-12 rounded-full bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center mx-auto mb-3">
+                                                                <Plus className="w-6 h-6 text-zinc-300" />
+                                                            </div>
+                                                            <p className="text-sm text-zinc-500 font-medium">Bu kategoride henüz ürün bulunmuyor.</p>
+                                                            <Button 
+                                                                variant="link" 
+                                                                className="mt-2 text-indigo-600 font-bold"
+                                                                onClick={() => {
+                                                                    setSelectedCategoryId(category.id);
+                                                                    setEditingProduct(null);
+                                                                    setIsProductDialogOpen(true);
+                                                                }}
+                                                            >
+                                                                İlk ürünü ekle →
+                                                            </Button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </Card>
+                            </Reorder.Item>
+                        );
+                    })}
+                </Reorder.Group>
+
+                {draftData.categories.length === 0 && (
+                    <div className="py-24 text-center border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl bg-zinc-50/50 dark:bg-zinc-900/20">
+                        <div className="w-16 h-16 rounded-full bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center mx-auto mb-4">
+                            <ListPlus className="w-8 h-8 text-zinc-400" />
                         </div>
-                    ) : (
-                        <div className="py-20 text-center text-zinc-500 border rounded-xl bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-inner">
-                            Lütfen sol taraftan bir kategori seçin veya yeni bir kategori oluşturun.
-                        </div>
-                    )}
-                </div>
+                        <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Henüz kategori yok</h3>
+                        <p className="text-zinc-500 mt-2 max-w-xs mx-auto">Menünüzü oluşturmaya bir kategori ekleyerek başlayın.</p>
+                        <Button 
+                            onClick={() => setIsCategoryDialogOpen(true)}
+                            className="mt-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 px-8 rounded-xl shadow-lg shadow-indigo-500/20"
+                        >
+                            <Plus className="w-5 h-5 mr-2" /> Kategori Oluştur
+                        </Button>
+                    </div>
+                )}
             </div>
 
             {/* Category Dialog */}
