@@ -6,7 +6,7 @@ import Image from "next/image";
 
 export function Hero() {
     return (
-        <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden">
+        <section className="relative pt-24 pb-16 md:pt-48 md:pb-32 overflow-hidden">
             {/* Abstract Background Shapes */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 pointer-events-none">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]" />
@@ -24,22 +24,22 @@ export function Hero() {
                             YENİ: Yıllık Üyeliklerde %30 İndirim!
                         </div>
 
-                        <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100 leading-[1.1] mb-6">
+                        <h1 className="text-[32px] sm:text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100 leading-[1.15] mb-6">
                             Aracıya Komisyon Ödemeyi Bırakın, <span className="text-primary italic">5 dakikada</span> paket sipariş sitenizi kurun
                         </h1>
 
-                        <p className="text-lg md:text-xl text-zinc-600 dark:text-zinc-400 mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+                        <p className="text-base md:text-xl text-zinc-600 dark:text-zinc-400 mb-8 md:10 max-w-xl mx-auto lg:mx-0 leading-relaxed">
                             WhatsApp entegrasyonlu, akıllı zil bildirimli ve profesyonel yönetim panelli dijital şubeniz bugün hazır. Kurulum ücretsiz, kredi kartı gerekmez.
                         </p>
 
-                        <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-10">
-                            <Button size="lg" className="h-14 px-8 text-lg font-bold shadow-xl shadow-primary/20 hover:scale-105 transition-all w-full sm:w-auto">
+                        <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 md:gap-4 mb-10">
+                            <Button size="lg" className="h-12 md:h-14 px-8 text-base md:text-lg font-bold shadow-xl shadow-primary/20 hover:scale-105 transition-all w-full sm:w-auto">
                                 Ücretsiz Başla
                                 <ArrowRight className="ml-2 w-5 h-5" />
                             </Button>
-                            <Button variant="outline" size="lg" className="h-14 px-8 text-lg font-bold border-2 w-full sm:w-auto hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-all">
+                            <Button variant="outline" size="lg" className="h-12 md:h-14 px-8 text-base md:text-lg font-bold border-2 w-full sm:w-auto hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-all">
                                 <PlayCircle className="mr-2 w-5 h-5" />
-                                Yönetim Panelini Gör
+                                Yönetim Paneli
                             </Button>
                         </div>
 

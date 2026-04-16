@@ -71,7 +71,7 @@ export function Pricing() {
                             className={cn(
                                 "relative p-8 rounded-3xl border transition-all duration-300",
                                 plan.popular
-                                    ? "bg-white dark:bg-zinc-950 border-primary shadow-2xl shadow-primary/10 scale-105 z-10 ring-4 ring-primary/5"
+                                    ? "bg-white dark:bg-zinc-950 border-primary shadow-2xl shadow-primary/10 md:scale-105 z-10 ring-4 ring-primary/5"
                                     : "bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 hover:border-zinc-200"
                             )}
                         >

@@ -118,8 +118,8 @@ export default function AdminSettingsPage() {
 
     return (
         <div className="max-w-3xl mx-auto space-y-6 pb-24">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold dark:text-zinc-100">Restoran Ayarları</h1>
+            <div className="flex justify-between items-center mb-4 md:mb-6 px-1">
+                <h1 className="text-2xl md:text-3xl font-bold dark:text-zinc-100 tracking-tight">Restoran Ayarları</h1>
                 <Button
                     onClick={handleSave}
                     className={`gap-2 shadow-md hidden md:flex transition-all ${saved ? "bg-emerald-600 hover:bg-emerald-700" : ""}`}
@@ -166,7 +166,7 @@ export default function AdminSettingsPage() {
                         Otomatik oluşturulan logo veya kendi özel logonuzu buradan yönetin.
                     </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-4 md:p-6">
                     <input
                         ref={fileInputRef}
                         type="file"
@@ -175,71 +175,50 @@ export default function AdminSettingsPage() {
                         onChange={e => { const f = e.target.files?.[0]; if (f) handleLogoFile(f); }}
                     />
 
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                    <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-center">
                         {/* Preview Section */}
-                        <div className="md:col-span-5 flex flex-col items-center justify-center p-6 bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl border border-zinc-100 dark:border-zinc-800 relative group">
-                            <Label className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-4 self-start">Görünüm Önizleme</Label>
-
+                        <div className="w-full md:w-[180px] flex flex-col items-center justify-center p-4 bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl border border-zinc-100 dark:border-zinc-800 relative group shrink-0">
                             <div className="relative">
                                 <RestaurantLogo
                                     name={formData.name}
                                     logoUrl={formData.logoUrl}
-                                    size={140}
-                                    className="shadow-2xl ring-4 ring-white dark:ring-zinc-800"
+                                    size={100}
+                                    className="shadow-xl ring-2 ring-white dark:ring-zinc-800"
                                 />
 
                                 {formData.logoUrl && (
                                     <button
                                         type="button"
                                         onClick={() => setFormData(prev => ({ ...prev, logoUrl: "" }))}
-                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 shadow-lg transition-transform hover:scale-110 active:scale-95"
-                                        title="Logoyu Kaldır"
+                                        className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-lg"
                                     >
-                                        <X className="w-4 h-4" />
+                                        <X className="w-3.5 h-3.5" />
                                     </button>
                                 )}
                             </div>
 
-                            <p className="mt-4 text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                                {formData.logoUrl ? "Özel Logo Aktif" : "Otomatik Logo Aktif"}
+                            <p className="mt-3 text-[10px] uppercase font-bold text-zinc-400">
+                                {formData.logoUrl ? "Özel Logo" : "Sistem Logosu"}
                             </p>
                         </div>
 
                         {/* Action Section */}
-                        <div className="md:col-span-7 space-y-5">
+                        <div className="flex-1 w-full space-y-4">
                             <div
                                 onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
                                 onDragLeave={() => setIsDragging(false)}
                                 onDrop={handleDrop}
                                 onClick={() => fileInputRef.current?.click()}
-                                className={`group flex flex-col items-center justify-center py-10 px-6 rounded-2xl border-2 border-dashed cursor-pointer transition-all duration-300 ${isDragging
-                                    ? "border-emerald-500 bg-emerald-500/5 scale-[1.01]"
+                                className={`group flex flex-col items-center justify-center py-6 md:py-8 px-6 rounded-2xl border-2 border-dashed cursor-pointer transition-all ${isDragging
+                                    ? "border-emerald-500 bg-emerald-500/5"
                                     : "border-zinc-200 dark:border-zinc-800 hover:border-emerald-400 hover:bg-zinc-50 dark:hover:bg-zinc-900"
                                     }`}
                             >
-                                <div className={`p-4 rounded-2xl mb-4 transition-colors ${isDragging ? "bg-emerald-500 text-white" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 group-hover:text-emerald-500 group-hover:bg-emerald-50 dark:group-hover:bg-emerald-500/10"
-                                    }`}>
-                                    <Upload className="w-8 h-8" />
-                                </div>
-
-                                <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-100 mb-1">
-                                    {isDragging ? "Buraya Bırakın" : "Kendi Logonuzu Yükleyin"}
+                                <Upload className={`w-6 h-6 mb-2 ${isDragging ? "text-emerald-500" : "text-zinc-400 group-hover:text-emerald-500"}`} />
+                                <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mb-0.5 text-center">
+                                    {isDragging ? "Buraya Bırakın" : "Logo Yükle"}
                                 </h4>
-                                <p className="text-sm text-zinc-500 text-center max-w-[240px]">
-                                    Logonuzu buraya sürükleyin veya <span className="text-emerald-500 font-semibold underline decoration-2 underline-offset-4">bilgisayarınızdan seçin</span>.
-                                </p>
-                                <p className="text-[10px] uppercase font-bold tracking-widest text-zinc-400 mt-4">PNG, JPG veya SVG (Max 5MB)</p>
-                            </div>
-
-                            <div className="flex flex-col space-y-2">
-                                <div className="flex items-start gap-2 text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                                    <div className="w-1 h-1 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-                                    <span>Logonuz yoksa sistem dükkan isminizden <strong>özel vektörel bir logo</strong> üretir.</span>
-                                </div>
-                                <div className="flex items-start gap-2 text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                                    <div className="w-1 h-1 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-                                    <span>Yüklenen logolar kare formatta ve şeffaf (PNG/SVG) olduğunda daha şık görünür.</span>
-                                </div>
+                                <p className="text-xs text-zinc-500 text-center">PNG, JPG veya SVG (Max 5MB)</p>
                             </div>
                         </div>
                     </div>
@@ -289,55 +268,43 @@ export default function AdminSettingsPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
-                    <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                    <div className="divide-y divide-zinc-100 dark:divide-zinc-800/60">
                         {Object.entries(DAYS_MAP).map(([key, label]) => {
                             const dayConfig = formData.days[key];
                             return (
-                                <div key={key} className={`flex flex-col md:flex-row md:items-center justify-between p-4 md:p-6 transition-colors ${dayConfig.isClosed ? "bg-zinc-50/50 dark:bg-zinc-900/30" : "bg-white dark:bg-zinc-950"}`}>
-                                    <div className="flex items-center gap-4 mb-4 md:mb-0">
-                                        <div className="w-24">
-                                            <span className={`font-bold ${dayConfig.isClosed ? "text-zinc-400" : "text-zinc-900 dark:text-zinc-100"}`}>
-                                                {label}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <Switch
-                                                size="sm"
-                                                checked={!dayConfig.isClosed}
-                                                onCheckedChange={(checked) => handleDayChange(key, 'isClosed', !checked)}
-                                            />
-                                            <span className="text-xs font-medium text-zinc-500">
-                                                {dayConfig.isClosed ? "Kapalı" : "Açık"}
-                                            </span>
-                                        </div>
+                                <div key={key} className={`flex items-center justify-between px-4 py-3 md:px-6 md:py-4 transition-colors ${dayConfig.isClosed ? "bg-zinc-50/50 dark:bg-zinc-900/10" : "bg-white dark:bg-zinc-950"}`}>
+                                    <div className="flex items-center gap-3 flex-1">
+                                        <Switch
+                                            className="scale-90"
+                                            checked={!dayConfig.isClosed}
+                                            onCheckedChange={(checked) => handleDayChange(key, 'isClosed', !checked)}
+                                        />
+                                        <span className={`text-sm font-bold w-12 md:w-20 ${dayConfig.isClosed ? "text-zinc-400" : "text-zinc-900 dark:text-zinc-100"}`}>
+                                            {label.substring(0, 3)}
+                                            <span className="hidden md:inline">{label.substring(3)}</span>
+                                        </span>
                                     </div>
 
-                                    {!dayConfig.isClosed && (
-                                        <div className="flex items-center gap-3 animate-in fade-in slide-in-from-right-2 duration-300">
-                                            <div className="relative">
-                                                <Input
-                                                    type="time"
-                                                    value={dayConfig.open}
-                                                    onChange={(e) => handleDayChange(key, 'open', e.target.value)}
-                                                    className="w-32 h-10 bg-zinc-50 dark:bg-zinc-900 border-none font-medium"
-                                                />
-                                            </div>
-                                            <span className="text-zinc-400 font-bold">—</span>
-                                            <div className="relative">
-                                                <Input
-                                                    type="time"
-                                                    value={dayConfig.close}
-                                                    onChange={(e) => handleDayChange(key, 'close', e.target.value)}
-                                                    className="w-32 h-10 bg-zinc-50 dark:bg-zinc-900 border-none font-medium"
-                                                />
-                                            </div>
+                                    {!dayConfig.isClosed ? (
+                                        <div className="flex items-center gap-2 md:gap-3">
+                                            <Input
+                                                type="time"
+                                                value={dayConfig.open}
+                                                onChange={(e) => handleDayChange(key, 'open', e.target.value)}
+                                                className="w-[90px] md:w-28 h-9 text-xs md:text-sm bg-zinc-50 dark:bg-zinc-900 border-none font-bold text-center appearance-none"
+                                            />
+                                            <span className="text-zinc-300 dark:text-zinc-700 text-xs">—</span>
+                                            <Input
+                                                type="time"
+                                                value={dayConfig.close}
+                                                onChange={(e) => handleDayChange(key, 'close', e.target.value)}
+                                                className="w-[90px] md:w-28 h-9 text-xs md:text-sm bg-zinc-50 dark:bg-zinc-900 border-none font-bold text-center appearance-none"
+                                            />
                                         </div>
-                                    )}
-
-                                    {dayConfig.isClosed && (
-                                        <div className="bg-zinc-100 dark:bg-zinc-800/50 px-4 py-2 rounded-xl text-xs font-bold text-zinc-400 uppercase tracking-widest md:w-[285px] text-center">
-                                            Tüm Gün Kapalı
-                                        </div>
+                                    ) : (
+                                        <span className="text-[10px] md:text-xs font-bold text-zinc-400 uppercase tracking-widest bg-zinc-100 dark:bg-zinc-900 px-3 py-1.5 rounded-lg">
+                                            KAPALI
+                                        </span>
                                     )}
                                 </div>
                             );

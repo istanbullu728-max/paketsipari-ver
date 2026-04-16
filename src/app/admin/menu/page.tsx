@@ -360,13 +360,13 @@ export default function AdminMenuPage() {
     return (
         <div className="space-y-6 max-w-5xl mx-auto pb-20">
             {/* Header Section from Screenshot */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 border-b border-zinc-100 dark:border-zinc-800 pb-6">
-                <div className="space-y-1.5">
-                    <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-white flex items-center gap-3">
-                        <UtensilsCrossed className="w-8 h-8 text-indigo-600" />
+            <div className="flex flex-col sm:flex-row justify-between items-center sm:items-end gap-6 border-b border-zinc-100 dark:border-zinc-800 pb-6 text-center sm:text-left">
+                <div className="space-y-1.5 flex flex-col items-center sm:items-start">
+                    <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-white flex items-center gap-3">
+                        <UtensilsCrossed className="w-6 h-6 md:w-8 md:h-8 text-indigo-600" />
                         Dijital Menü Yönetimi
                     </h1>
-                    <p className="text-zinc-500 text-base max-w-lg">
+                    <p className="text-zinc-500 text-sm md:text-base max-w-lg">
                         Menünüzdeki ürünleri ve kategorileri buradan düzenleyebilirsiniz. Değişikliklerin canlı sitede görünmesi için güncellemeyi unutmayın.
                     </p>
                 </div>
