@@ -586,6 +586,7 @@ export default function AdminMenuPage() {
                         );
                     })}
                 </Reorder.Group>
+                </div>
 
                 {draftData.categories.length === 0 && (
                     <div className="py-24 text-center border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl bg-zinc-50/50 dark:bg-zinc-900/20">
