@@ -176,13 +176,18 @@ export default function AdminSidebar() {
     return (
         <>
             {/* Mobile top bar */}
-            <div className="md:hidden flex items-center justify-between bg-white dark:bg-zinc-950 p-4 border-b border-zinc-200 dark:border-zinc-800 sticky top-0 z-50">
-                <div className="flex items-center gap-2">
-                    <LogoOrAvatar size="sm" />
-                    <span className="font-bold dark:text-zinc-100">{restaurantData.name}</span>
+            <div className="md:hidden flex items-center justify-between bg-white/90 dark:bg-zinc-950/90 p-4 border-b border-zinc-200 dark:border-zinc-800 sticky top-0 z-50 shadow-sm backdrop-blur-md">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+                        <span className="text-white font-black text-xl">P</span>
+                    </div>
+                    <div className="flex flex-col leading-none">
+                        <span className="font-black text-base text-zinc-900 dark:text-zinc-100">{restaurantData.name}</span>
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-0.5">Yönetim Paneli</span>
+                    </div>
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => setIsMobileOpen(!isMobileOpen)}>
-                    <Menu className="w-6 h-6 dark:text-zinc-100" />
+                <Button variant="ghost" size="icon" className="w-10 h-10 rounded-xl bg-zinc-50 dark:bg-zinc-900" onClick={() => setIsMobileOpen(!isMobileOpen)}>
+                    <Menu className="w-5 h-5 dark:text-zinc-100" />
                 </Button>
             </div>
 

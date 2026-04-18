@@ -60,23 +60,23 @@ export default function ProductCard({
                     )}
                 </div>
 
-                        {/* Right: Stats */}
-                        <div className="flex sm:flex-col justify-between sm:justify-center gap-4 sm:gap-6 border-t sm:border-t-0 sm:border-l border-zinc-100 bg-zinc-50/50 p-6 sm:px-10 sm:min-w-[200px] sm:rounded-none rounded-b-2xl">
-                            <div className="flex flex-col items-center sm:items-start gap-1">
-                                <span className="text-2xl sm:text-3xl font-black text-zinc-900 italic">
-                                    {product.price}
-                                    <span className="text-xs font-bold ml-1 not-italic opacity-50">₺</span>
-                                </span>
-                                <span className="text-[10px] text-zinc-400 font-extrabold uppercase tracking-[0.2em]">Min. Sipariş</span>
-                            </div>
-                            <div className="w-px h-8 bg-zinc-200 sm:hidden self-center" />
-                            <div className="flex flex-col items-center sm:items-start gap-1">
-                                <span className="text-2xl sm:text-3xl font-black text-zinc-900 italic">
-                                    25
-                                    <span className="text-xs font-bold ml-1 not-italic opacity-50">dk</span>
-                                </span>
-                                <span className="text-[10px] text-zinc-400 font-extrabold uppercase tracking-[0.2em]">Teslimat</span>
-                            </div>
+                {/* Bottom row */}
+                <div className="flex items-center justify-between mt-4 pb-1">
+                    <div className="flex flex-col">
+                        <span className="font-black text-lg sm:text-xl text-zinc-900 leading-none tracking-tighter">
+                            {product.price.toFixed(2)} <span className="text-xs italic ml-0.5">₺</span>
+                        </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        {hasVariations && (
+                            <span className="flex items-center gap-1 text-[9px] font-black text-zinc-400 bg-zinc-100 px-2.5 py-1 rounded-full uppercase tracking-tighter">
+                                <Tag className="w-2.5 h-2.5" />
+                                Seçenekli
+                            </span>
+                        )}
+                        <div className="w-9 h-9 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 active:scale-95 transition-all">
+                            <Plus className="w-5 h-5 stroke-[3]" />
                         </div>
                     </div>
                 </div>
