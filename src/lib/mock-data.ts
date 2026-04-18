@@ -207,4 +207,5 @@ export const mockRestaurant: Restaurant = {
     },
     categories: mockCategories,
     products: mockProducts,
+    serviceAreas: [],
 };

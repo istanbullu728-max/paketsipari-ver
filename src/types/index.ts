@@ -1,3 +1,10 @@
+export interface ServiceArea {
+  id: string;
+  city: string;
+  district: string;
+  neighborhoods: string[];
+}
+
 export interface Restaurant {
   id: string;
   slug: string;
@@ -20,6 +27,7 @@ export interface Restaurant {
   };
   categories: Category[];
   products: Product[];
+  serviceAreas: ServiceArea[];
   address?: string;
   description?: string;
 }
