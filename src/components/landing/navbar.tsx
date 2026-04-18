@@ -22,28 +22,37 @@ export function Navbar() {
     return (
         <nav
             className={cn(
-                "fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b",
-                isScrolled
-                    ? "bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-zinc-200 dark:border-zinc-800 py-3 shadow-sm"
-                    : "bg-transparent border-transparent py-5"
+                "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
+                isScrolled ? "py-4" : "py-6"
             )}
         >
             <div className="container mx-auto px-4 md:px-6">
-                <div className="flex items-center justify-between">
-                    <Link href="/" className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                            <span className="text-white font-bold text-xl">P</span>
+                <div className={cn(
+                    "flex items-center justify-between transition-all duration-500 mx-auto",
+                    isScrolled 
+                        ? "bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/20 dark:border-zinc-800/50 py-3 px-6 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.08)] max-w-5xl" 
+                        : "bg-transparent py-2 px-0 max-w-7xl"
+                )}>
+                    <Link href="/" className="flex items-center gap-2 group">
+                        <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
+                            <span className="text-white font-black text-xl">P</span>
                         </div>
-                        <span className="font-bold text-xl tracking-tight text-zinc-900 dark:text-zinc-100 italic">
-                            Paket<span className="text-primary NOT-italic">Servis</span>
+                        <span className="font-black text-2xl tracking-tighter text-zinc-900 dark:text-zinc-100">
+                            Paket<span className="text-primary italic">Servis</span>
                         </span>
                     </Link>
 
                     {/* Desktop Navigation */}
-                    <div className="hidden md:flex items-center gap-8">
-                        <Link href="#features" className="text-sm font-medium text-zinc-600 hover:text-primary transition-colors">Özellikler</Link>
-                        <Link href="#how-it-works" className="text-sm font-medium text-zinc-600 hover:text-primary transition-colors">Nasıl Çalışır?</Link>
-                        <Link href="#pricing" className="text-sm font-medium text-zinc-600 hover:text-primary transition-colors">Fiyatlandırma</Link>
+                    <div className="hidden md:flex items-center gap-10">
+                        {["Özellikler", "Nasıl Çalışır?", "Fiyatlandırma"].map((item) => (
+                            <Link 
+                                key={item}
+                                href={`#${item.toLowerCase().replace("?", "").replace(" ", "-")}`} 
+                                className="text-[13px] font-bold uppercase tracking-widest text-zinc-500 hover:text-primary transition-colors"
+                            >
+                                {item}
+                            </Link>
+                        ))}
                     </div>
 
                     <div className="hidden md:flex items-center gap-3">
@@ -52,39 +61,45 @@ export function Navbar() {
 
                     {/* Mobile Menu Button */}
                     <button
-                        className="md:hidden p-2 text-zinc-600"
+                        className="md:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                     >
-                        {isMobileMenuOpen ? <X /> : <Menu />}
+                        {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
                     </button>
                 </div>
             </div>
 
-            {/* Mobile Menu */}
+            {/* Mobile Menu Overlay */}
             {isMobileMenuOpen && (
-                <div className="md:hidden absolute top-full left-0 right-0 bg-white dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 p-4 flex flex-col gap-4 animate-in slide-in-from-top duration-300">
-                    <Link
-                        href="#features"
-                        className="text-lg font-medium p-2"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                        Özellikler
-                    </Link>
-                    <Link
-                        href="#how-it-works"
-                        className="text-lg font-medium p-2"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                        Nasıl Çalışır?
-                    </Link>
-                    <Link
-                        href="#pricing"
-                        className="text-lg font-medium p-2"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                        Fiyatlandırma
-                    </Link>
-                    <div className="flex flex-col gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                <div className="md:hidden fixed inset-0 z-40 bg-white dark:bg-zinc-950 flex flex-col p-8 animate-in fade-in slide-in-from-right duration-300">
+                    <div className="flex justify-between items-center mb-12">
+                         <Link href="/" className="flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
+                            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
+                                <span className="text-white font-black text-xl">P</span>
+                            </div>
+                            <span className="font-black text-2xl tracking-tighter text-zinc-900 dark:text-zinc-100">
+                                Paket<span className="text-primary italic">Servis</span>
+                            </span>
+                        </Link>
+                        <button onClick={() => setIsMobileMenuOpen(false)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800">
+                            <X size={20} />
+                        </button>
+                    </div>
+
+                    <div className="flex flex-col gap-6">
+                        {["Özellikler", "Nasıl Çalışır?", "Fiyatlandırma"].map((item) => (
+                            <Link
+                                key={item}
+                                href={`#${item.toLowerCase().replace("?", "").replace(" ", "-")}`}
+                                className="text-3xl font-black tracking-tighter hover:text-primary transition-colors"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                                {item}
+                            </Link>
+                        ))}
+                    </div>
+                    
+                    <div className="mt-auto flex flex-col gap-4 pt-10 border-t border-zinc-100 dark:border-zinc-800">
                         <AuthModals />
                     </div>
                 </div>

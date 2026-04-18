@@ -96,21 +96,21 @@ export default function StorefrontHeader({ restaurant }: { restaurant: Restauran
                         </div>
 
                         {/* Right: Stats */}
-                        <div className="flex sm:flex-col justify-around sm:justify-center gap-0 border-t sm:border-t-0 sm:border-l border-gray-100 bg-gray-50/60 px-5 py-4 sm:px-8 sm:py-6 sm:min-w-[180px] sm:rounded-none rounded-b-2xl">
-                            <div className="flex flex-col items-center gap-1 text-center">
-                                <span className="text-2xl font-black text-primary">
+                        <div className="flex sm:flex-col justify-between sm:justify-center gap-4 sm:gap-6 border-t sm:border-t-0 sm:border-l border-zinc-100 bg-zinc-50/50 p-6 sm:px-10 sm:min-w-[200px] sm:rounded-none rounded-b-2xl">
+                            <div className="flex flex-col items-center sm:items-start gap-1">
+                                <span className="text-2xl sm:text-3xl font-black text-zinc-900 italic">
                                     {restaurant.minOrderAmount}
-                                    <span className="text-sm font-bold ml-0.5">₺</span>
+                                    <span className="text-xs font-bold ml-1 not-italic opacity-50">₺</span>
                                 </span>
-                                <span className="text-[11px] text-gray-500 font-semibold uppercase tracking-wider">Min. Sipariş</span>
+                                <span className="text-[10px] text-zinc-400 font-extrabold uppercase tracking-[0.2em]">Min. Sipariş</span>
                             </div>
-                            <div className="w-px bg-gray-200 sm:hidden" />
-                            <div className="flex flex-col items-center gap-1 text-center">
-                                <span className="text-2xl font-black text-emerald-600">
+                            <div className="w-px h-8 bg-zinc-200 sm:hidden self-center" />
+                            <div className="flex flex-col items-center sm:items-start gap-1">
+                                <span className="text-2xl sm:text-3xl font-black text-zinc-900 italic">
                                     25
-                                    <span className="text-sm font-bold ml-0.5">dk</span>
+                                    <span className="text-xs font-bold ml-1 not-italic opacity-50">dk</span>
                                 </span>
-                                <span className="text-[11px] text-gray-500 font-semibold uppercase tracking-wider">Teslimat</span>
+                                <span className="text-[10px] text-zinc-400 font-extrabold uppercase tracking-[0.2em]">Teslimat</span>
                             </div>
                         </div>
                     </div>
