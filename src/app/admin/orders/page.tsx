@@ -21,6 +21,7 @@ import {
     Trash2,
     BellRing,
     Bike,
+    User,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
