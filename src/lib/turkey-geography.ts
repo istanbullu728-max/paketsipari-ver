@@ -20,7 +20,9 @@ export async function getProvinces(): Promise<Province[]> {
     try {
         const res = await fetch(`${API_BASE}/provinces`);
         const { data } = await res.json();
-        return data.map((p: any) => ({ id: p.id, name: p.name }));
+        return data
+            .map((p: any) => ({ id: p.id, name: p.name }))
+            .sort((a: Province, b: Province) => a.name.localeCompare(b.name, 'tr'));
     } catch (e) {
         console.error("Failed to fetch provinces", e);
         return [];
@@ -29,10 +31,12 @@ export async function getProvinces(): Promise<Province[]> {
 
 export async function getDistricts(provinceName: string): Promise<District[]> {
     try {
-        const res = await fetch(`${API_BASE}/provinces?name=${encodeURIComponent(provinceName)}`);
+        const res = await fetch(`${API_BASE}/districts?province=${encodeURIComponent(provinceName)}&limit=1000`);
         const { data } = await res.json();
-        if (data && data[0] && data[0].districts) {
-            return data[0].districts.map((d: any) => ({ id: d.id, name: d.name }));
+        if (data) {
+            return data
+                .map((d: any) => ({ id: d.id, name: d.name }))
+                .sort((a: District, b: District) => a.name.localeCompare(b.name, 'tr'));
         }
         return [];
     } catch (e) {
@@ -43,13 +47,12 @@ export async function getDistricts(provinceName: string): Promise<District[]> {
 
 export async function getNeighborhoods(provinceName: string, districtName: string): Promise<Neighborhood[]> {
     try {
-        const res = await fetch(`${API_BASE}/provinces?name=${encodeURIComponent(provinceName)}&districts.name=${encodeURIComponent(districtName)}`);
+        const res = await fetch(`${API_BASE}/neighborhoods?province=${encodeURIComponent(provinceName)}&district=${encodeURIComponent(districtName)}&limit=2000`);
         const { data } = await res.json();
-        if (data && data[0]) {
-            const district = data[0].districts.find((d: any) => d.name.toLowerCase() === districtName.toLowerCase());
-            if (district && district.neighborhoods) {
-                return district.neighborhoods.map((n: any) => ({ id: n.id, name: n.name }));
-            }
+        if (data) {
+            return data
+                .map((n: any) => ({ id: n.id, name: n.name }))
+                .sort((a: Neighborhood, b: Neighborhood) => a.name.localeCompare(b.name, 'tr'));
         }
         return [];
     } catch (e) {
