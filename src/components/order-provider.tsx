@@ -24,12 +24,14 @@ export interface Order {
     status: OrderStatus;
     createdAt: Date;
     updatedAt?: Date;
+    assignedCourierId?: string;
 }
 
 interface OrderContextType {
     orders: Order[];
     addOrder: (order: Omit<Order, "id" | "status" | "createdAt">) => void;
     updateOrderStatus: (orderId: string, newStatus: OrderStatus) => void;
+    assignCourier: (orderId: string, courierId: string) => void;
     deleteOrder: (orderId: string) => void;
     getMetrics: () => {
         todayRevenue: number;
@@ -60,6 +62,10 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus, updatedAt: new Date() } : o));
     };
 
+    const assignCourier = (orderId: string, courierId: string) => {
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, assignedCourierId: courierId, updatedAt: new Date() } : o));
+    };
+
     const deleteOrder = (orderId: string) => {
         setOrders(prev => prev.filter(o => o.id !== orderId));
     };
@@ -84,7 +90,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     };
 
     return (
-        <OrderContext.Provider value={{ orders, addOrder, updateOrderStatus, deleteOrder, getMetrics }}>
+        <OrderContext.Provider value={{ orders, addOrder, updateOrderStatus, assignCourier, deleteOrder, getMetrics }}>
             {children}
         </OrderContext.Provider>
     );

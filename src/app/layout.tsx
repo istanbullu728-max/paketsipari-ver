@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { RestaurantProvider } from "@/components/restaurant-provider";
 import { OrderProvider } from "@/components/order-provider";
+import { CourierProvider } from "@/components/courier-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,7 +46,9 @@ export default function RootLayout({
         >
           <RestaurantProvider>
             <OrderProvider>
-              {children}
+              <CourierProvider>
+                {children}
+              </CourierProvider>
             </OrderProvider>
           </RestaurantProvider>
         </ThemeProvider>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Order, OrderStatus, useOrders } from "@/components/order-provider";
+import { useCouriers } from "@/components/courier-provider";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import {
@@ -19,6 +20,7 @@ import {
     PartyPopper,
     Trash2,
     BellRing,
+    Bike,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -97,10 +99,15 @@ function openWa(order: Order, type: "confirm" | "onway" | "generic" | "review") 
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function AdminOrdersPage() {
-    const { orders, updateOrderStatus, deleteOrder } = useOrders();
+    const { orders, updateOrderStatus, assignCourier, deleteOrder } = useOrders();
+    const { couriers } = useCouriers();
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [filter, setFilter] = useState<OrderStatus | "all">("all");
     const [showNewOrderAlert, setShowNewOrderAlert] = useState(false);
+
+    // Courier Select Dialog States
+    const [isCourierDialogOpen, setIsCourierDialogOpen] = useState(false);
+    const [orderForCourier, setOrderForCourier] = useState<Order | null>(null);
 
     // ── Bell notification on new pending order ─────────────────────────
     const prevCountRef = useRef(orders.length);
@@ -167,6 +174,24 @@ export default function AdminOrdersPage() {
         if (selectedOrder?.id === order.id) {
             setSelectedOrder(prev => prev ? { ...prev, status: action === "approve" ? "preparing" : action === "onway" ? "delivering" : action === "delivered" ? "completed" : "cancelled" } : null);
         }
+    };
+
+    const handleSendToCourier = (order: Order, courier: any) => {
+        assignCourier(order.id, courier.id);
+        
+        const items = order.items.map(i => `${i.quantity}x ${i.productName}`).join("\n");
+        const message = `🚀 *YENİ TESLİMAT GÖREVİ*\n\n` +
+            `👤 *Müşteri:* ${order.customerName}\n` +
+            `📍 *Adres:* ${order.customerAddress}\n` +
+            `📞 *Telefon:* ${order.customerPhone}\n\n` +
+            `🛒 *Sipariş:* \n${items}\n\n` +
+            `💰 *Toplam:* ${order.totalAmount} TL\n\n` +
+            `🕒 *Sipariş Zamanı:* ${format(order.createdAt, "HH:mm")}\n` +
+            `⚠️ Lütfen teslimat sonrası sistemden teslim edildi bilgisini admin'e iletin.`;
+
+        window.open(buildWaLink(courier.phone, message), "_blank");
+        setIsCourierDialogOpen(false);
+        setOrderForCourier(null);
     };
 
     const FILTER_TABS: { key: OrderStatus | "all"; label: string }[] = [
@@ -300,14 +325,28 @@ export default function AdminOrdersPage() {
 
                                         {/* PREPARING → Yola Çıkar & WA */}
                                         {order.status === "preparing" && (
-                                            <Button
-                                                size="sm"
-                                                className="bg-blue-600 hover:bg-blue-700 text-white gap-1.5"
-                                                onClick={() => handleAction(order, "onway")}
-                                            >
-                                                <span className="text-base leading-none">🛵</span>
-                                                Yola Çıkar
-                                            </Button>
+                                            <div className="flex gap-2">
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="border-indigo-200 text-indigo-700 dark:border-indigo-500/30 dark:text-indigo-400 gap-1.5"
+                                                    onClick={() => {
+                                                        setOrderForCourier(order);
+                                                        setIsCourierDialogOpen(true);
+                                                    }}
+                                                >
+                                                    <Bike className="w-3.5 h-3.5" />
+                                                    Kurye Gönder
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    className="bg-blue-600 hover:bg-blue-700 text-white gap-1.5"
+                                                    onClick={() => handleAction(order, "onway")}
+                                                >
+                                                    <span className="text-base leading-none">🛵</span>
+                                                    Yola Çıkar
+                                                </Button>
+                                            </div>
                                         )}
 
                                         {/* DELIVERING → Teslim Edildi */}
@@ -525,6 +564,17 @@ export default function AdminOrdersPage() {
                                                 <Truck className="w-4 h-4" />
                                                 Yola Çıkar — Yolda mj. gönder
                                             </Button>
+                                            <Button
+                                                variant="outline"
+                                                className="w-full bg-indigo-50 dark:bg-indigo-500/10 border-indigo-100 dark:border-indigo-500/20 text-indigo-700 dark:text-indigo-400 gap-2"
+                                                onClick={() => {
+                                                    setOrderForCourier(selectedOrder);
+                                                    setIsCourierDialogOpen(true);
+                                                }}
+                                            >
+                                                <Bike className="w-4 h-4" />
+                                                Kuryeye İş Ataması Yap
+                                            </Button>
                                             <Button variant="outline" className="w-full gap-2" onClick={() => openWa(selectedOrder, "generic")}>
                                                 <MessageCircle className="w-4 h-4" /> WhatsApp'ta Görüş
                                             </Button>
@@ -588,6 +638,76 @@ export default function AdminOrdersPage() {
                     );
                 })()}
             </Sheet>
+            {/* ── Courier Selection Dialog ─────────────────────────────────────────── */}
+            <AnimatePresence>
+                {isCourierDialogOpen && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+                        <motion.div 
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 10 }}
+                            className="bg-white dark:bg-zinc-950 w-full max-w-sm rounded-[2rem] shadow-2xl border border-white/10 overflow-hidden"
+                        >
+                            <div className="p-8 space-y-6">
+                                <div className="text-center space-y-2">
+                                    <div className="w-16 h-16 bg-indigo-100 dark:bg-indigo-500/20 rounded-2xl flex items-center justify-center mx-auto text-indigo-600 dark:text-indigo-400">
+                                        <Bike className="w-8 h-8" />
+                                    </div>
+                                    <h2 className="text-2xl font-black">Kurye Seçin</h2>
+                                    <p className="text-zinc-500 text-sm font-medium">Siparişi teslim edecek personeli seçin.</p>
+                                </div>
+
+                                <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                                    {couriers.filter(c => c.isActive).map(courier => (
+                                        <button
+                                            key={courier.id}
+                                            onClick={() => orderForCourier && handleSendToCourier(orderForCourier, courier)}
+                                            className="w-full flex items-center justify-between p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 border border-transparent hover:border-indigo-200 dark:hover:border-indigo-500/30 transition-all group"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-xl bg-white dark:bg-zinc-800 flex items-center justify-center text-zinc-400 group-hover:text-indigo-600 transition-colors">
+                                                    <User className="w-5 h-5" />
+                                                </div>
+                                                <div className="text-left">
+                                                    <div className="font-bold text-sm dark:text-zinc-100">{courier.name}</div>
+                                                    <div className="text-xs text-zinc-400">{courier.phone}</div>
+                                                </div>
+                                            </div>
+                                            <div className="w-8 h-8 rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center shadow-sm group-hover:bg-indigo-600 group-hover:text-white transition-all text-zinc-300">
+                                                <Check className="w-4 h-4" />
+                                            </div>
+                                        </button>
+                                    ))}
+
+                                    {couriers.filter(c => c.isActive).length === 0 && (
+                                        <div className="text-center py-8">
+                                            <p className="text-sm text-zinc-500 font-medium italic">Şu an aktif kurye bulunmuyor.</p>
+                                            <Button 
+                                                variant="link" 
+                                                className="text-indigo-600 h-auto p-0 mt-2"
+                                                onClick={() => window.location.href = "/admin/couriers"}
+                                            >
+                                                Kurye eklemek için tıklayın
+                                            </Button>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <Button 
+                                    variant="ghost" 
+                                    className="w-full h-12 rounded-xl text-zinc-500 font-bold"
+                                    onClick={() => {
+                                        setIsCourierDialogOpen(false);
+                                        setOrderForCourier(null);
+                                    }}
+                                >
+                                    Vazgeç
+                                </Button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
