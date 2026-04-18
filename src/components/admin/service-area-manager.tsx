@@ -24,7 +24,9 @@ export default function ServiceAreaManager({ serviceAreas, onChange }: Props) {
     
     const [newArea, setNewArea] = useState({
         city: "",
+        cityId: 0,
         district: "",
+        districtId: 0,
         selectedMahalles: [] as string[]
     });
 
@@ -43,33 +45,33 @@ export default function ServiceAreaManager({ serviceAreas, onChange }: Props) {
 
     // Load Districts when City changes
     useEffect(() => {
-        if (!newArea.city) {
+        if (!newArea.cityId) {
             setDistricts([]);
             return;
         }
         const load = async () => {
             setLoading(p => ({ ...p, districts: true }));
-            const data = await getDistricts(newArea.city);
+            const data = await getDistricts(newArea.cityId);
             setDistricts(data);
             setLoading(p => ({ ...p, districts: false }));
         };
         load();
-    }, [newArea.city]);
+    }, [newArea.cityId]);
 
     // Load Neighborhoods when District changes
     useEffect(() => {
-        if (!newArea.district || !newArea.city) {
+        if (!newArea.districtId) {
             setNeighborhoods([]);
             return;
         }
         const load = async () => {
             setLoading(p => ({ ...p, neighborhoods: true }));
-            const data = await getNeighborhoods(newArea.city, newArea.district);
+            const data = await getNeighborhoods(newArea.districtId);
             setNeighborhoods(data);
             setLoading(p => ({ ...p, neighborhoods: false }));
         };
         load();
-    }, [newArea.city, newArea.district]);
+    }, [newArea.districtId]);
 
     const handleAdd = () => {
         if (!newArea.city || !newArea.district) return;
@@ -82,7 +84,7 @@ export default function ServiceAreaManager({ serviceAreas, onChange }: Props) {
         };
         
         onChange([...serviceAreas, area]);
-        setNewArea({ city: "", district: "", selectedMahalles: [] });
+        setNewArea({ city: "", cityId: 0, district: "", districtId: 0, selectedMahalles: [] });
         setShowAddForm(false);
     };
 
@@ -155,7 +157,16 @@ export default function ServiceAreaManager({ serviceAreas, onChange }: Props) {
                                 <select 
                                     className="w-full h-11 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 text-sm font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                                     value={newArea.city}
-                                    onChange={(e) => setNewArea({ city: e.target.value, district: "", selectedMahalles: [] })}
+                                    onChange={(e) => {
+                                        const p = provinces.find(x => x.name === e.target.value);
+                                        setNewArea({ 
+                                            city: e.target.value, 
+                                            cityId: p?.id || 0,
+                                            district: "", 
+                                            districtId: 0,
+                                            selectedMahalles: [] 
+                                        });
+                                    }}
                                     disabled={loading.provinces}
                                 >
                                     <option value="">Şehir Seçin</option>
@@ -172,8 +183,16 @@ export default function ServiceAreaManager({ serviceAreas, onChange }: Props) {
                                 <select 
                                     className="w-full h-11 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 text-sm font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-50"
                                     value={newArea.district}
-                                    onChange={(e) => setNewArea(prev => ({ ...prev, district: e.target.value, selectedMahalles: [] }))}
-                                    disabled={!newArea.city || loading.districts}
+                                    onChange={(e) => {
+                                        const d = districts.find(x => x.name === e.target.value);
+                                        setNewArea(prev => ({ 
+                                            ...prev, 
+                                            district: e.target.value, 
+                                            districtId: d?.id || 0,
+                                            selectedMahalles: [] 
+                                        }));
+                                    }}
+                                    disabled={!newArea.cityId || loading.districts}
                                 >
                                     <option value="">İlçe Seçin</option>
                                     {districts.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}

@@ -14,13 +14,13 @@ export interface Neighborhood {
     name: string;
 }
 
-const API_BASE = "https://turkiyeapi.dev/api/v1";
+const API_BASE = "https://api.turkiyeapi.dev/v1";
 
 export async function getProvinces(): Promise<Province[]> {
     try {
-        const res = await fetch(`${API_BASE}/provinces`);
+        const res = await fetch(`${API_BASE}/provinces?limit=100`);
         const { data } = await res.json();
-        return data
+        return (data || [])
             .map((p: any) => ({ id: p.id, name: p.name }))
             .sort((a: Province, b: Province) => a.name.localeCompare(b.name, 'tr'));
     } catch (e) {
@@ -29,9 +29,9 @@ export async function getProvinces(): Promise<Province[]> {
     }
 }
 
-export async function getDistricts(provinceName: string): Promise<District[]> {
+export async function getDistricts(provinceId: number): Promise<District[]> {
     try {
-        const res = await fetch(`${API_BASE}/districts?province=${encodeURIComponent(provinceName)}&limit=1000`);
+        const res = await fetch(`${API_BASE}/districts?provinceId=${provinceId}&limit=200`);
         const { data } = await res.json();
         if (data) {
             return data
@@ -45,9 +45,9 @@ export async function getDistricts(provinceName: string): Promise<District[]> {
     }
 }
 
-export async function getNeighborhoods(provinceName: string, districtName: string): Promise<Neighborhood[]> {
+export async function getNeighborhoods(districtId: number): Promise<Neighborhood[]> {
     try {
-        const res = await fetch(`${API_BASE}/neighborhoods?province=${encodeURIComponent(provinceName)}&district=${encodeURIComponent(districtName)}&limit=2000`);
+        const res = await fetch(`${API_BASE}/neighborhoods?districtId=${districtId}&limit=2000`);
         const { data } = await res.json();
         if (data) {
             return data
