@@ -22,23 +22,24 @@ export async function GET(request: NextRequest) {
     const wiki = wikiResult.status === "fulfilled" ? wikiResult.value : [];
     const google = googleResult.status === "fulfilled" ? googleResult.value : [];
 
-    // Merge and deduplicate, prefer DuckDuckGo which has most realistic food images
+    // Merge and deduplicate, prioritize Google, then DDG
     const seen = new Set<string>();
     const combined: string[] = [];
 
-    for (const url of [...ddg, ...google, ...wiki]) {
-        if (!seen.has(url) && combined.length < 15) {
+    // Prioritize Google results first as requested
+    for (const url of [...google, ...ddg, ...wiki]) {
+        if (!seen.has(url) && combined.length < 24) {
             seen.add(url);
             combined.push(url);
         }
     }
 
-    const source = ddg.length > 0 ? "duckduckgo" : google.length > 0 ? "google" : "wikimedia";
+    const source = google.length > 0 ? "google" : ddg.length > 0 ? "duckduckgo" : "wikimedia";
 
     return NextResponse.json({
         images: combined,
         source,
-        counts: { duckduckgo: ddg.length, google: google.length, wikimedia: wiki.length },
+        counts: { google: google.length, duckduckgo: ddg.length, wikimedia: wiki.length },
     });
 }
 
@@ -68,6 +69,7 @@ async function searchDuckDuckGo(query: string): Promise<string[]> {
             /vqd=['"]([^'"]{10,})['"]/,
             /vqd=([0-9-]+)/,
             /"vqd":"([^"]+)"/,
+            /vqd: ['"]([^'"]+)['"]/,
         ];
         for (const pattern of patterns) {
             const m = html.match(pattern);
@@ -112,37 +114,61 @@ async function searchDuckDuckGo(query: string): Promise<string[]> {
 
 async function searchGoogleImages(query: string): Promise<string[]> {
     try {
-        const url = `https://www.google.com/search?q=${encodeURIComponent(query)}&tbm=isch&hl=tr&gl=tr&safe=off&num=20`;
-        const res = await fetch(url, {
-            headers: {
-                "User-Agent":
-                    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-                "Accept-Language": "tr-TR,tr;q=0.9",
-                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-                "Referer": "https://www.google.com/",
-            },
-            signal: AbortSignal.timeout(7000),
-        });
+        const searchUrls = [
+            `https://www.google.com/search?q=${encodeURIComponent(query)}&tbm=isch&hl=tr&gl=tr&safe=off`,
+            `https://www.google.com/search?q=${encodeURIComponent(query)}&udm=2&hl=tr&gl=tr&safe=off`,
+            `https://www.google.com/search?q=${encodeURIComponent(query)}+yemek&tbm=isch&hl=tr&gl=tr`
+        ];
 
-        if (!res.ok) return [];
-        const html = await res.text();
+        for (const url of searchUrls) {
+            const res = await fetch(url, {
+                headers: {
+                    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",
+                    "Accept-Language": "tr-TR,tr;q=0.9,en;q=0.8",
+                    "Referer": "https://www.google.com/",
+                },
+                signal: AbortSignal.timeout(6000),
+            });
 
-        const urls: string[] = [];
+            if (!res.ok) continue;
+            const html = await res.text();
+            const urls: string[] = [];
 
-        // Extract "ou" (original url) from Google's embedded JSON
-        const ouPattern = /"ou":"(https?:[^"]+)"/g;
-        let match;
-        while ((match = ouPattern.exec(html)) !== null && urls.length < 12) {
-            const rawUrl = match[1]
-                .replace(/\\u003d/g, "=")
-                .replace(/\\u0026/g, "&")
-                .replace(/\\\//g, "/");
-            if (rawUrl.startsWith("http") && !rawUrl.includes("google.com")) {
-                urls.push(rawUrl);
+            // Pattern 1: High-res JSON structure
+            const jsonPattern = /\["(https?:\/\/[^"]+)",\s*(\d+),\s*(\d+)\]/g;
+            let match;
+            while ((match = jsonPattern.exec(html)) !== null && urls.length < 20) {
+                let u = match[1].replace(/\\u003d/g, "=").replace(/\\u0026/g, "&").replace(/\\\//g, "/");
+                if (u.startsWith("http") && !u.includes("gstatic") && !u.includes("google.com/search")) {
+                    if (!urls.includes(u)) urls.push(u);
+                }
             }
-        }
 
-        return urls;
+            // Pattern 2: data-src or data-iurl (often found in newer Google layouts)
+            if (urls.length < 10) {
+                const attrPattern = /(?:data-src|data-iurl)="([^"]+)"/g;
+                while ((match = attrPattern.exec(html)) !== null && urls.length < 20) {
+                    const u = match[1];
+                    if (u.startsWith("http") && !u.includes("google") && !u.includes("gstatic")) {
+                        if (!urls.includes(u)) urls.push(u);
+                    }
+                }
+            }
+
+            // Pattern 3: Simple img src for basic mobile/bot views
+            if (urls.length < 5) {
+                const imgPattern = /<img[^>]+src="([^"]+)"/g;
+                while ((match = imgPattern.exec(html)) !== null && urls.length < 20) {
+                    const u = match[1];
+                    if (u.startsWith("http") && !u.includes("google") && !u.includes("gstatic")) {
+                        if (!urls.includes(u)) urls.push(u);
+                    }
+                }
+            }
+
+            if (urls.length > 5) return urls;
+        }
+        return [];
     } catch (err) {
         console.error("[google]", (err as Error).message);
         return [];
