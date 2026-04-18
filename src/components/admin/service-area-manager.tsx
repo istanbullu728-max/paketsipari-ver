@@ -156,12 +156,13 @@ export default function ServiceAreaManager({ serviceAreas, onChange }: Props) {
                             <div className="relative">
                                 <select 
                                     className="w-full h-11 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 text-sm font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                                    value={newArea.city}
+                                    value={newArea.cityId || ""}
                                     onChange={(e) => {
-                                        const p = provinces.find(x => x.name === e.target.value);
+                                        const id = parseInt(e.target.value);
+                                        const p = provinces.find(x => x.id === id);
                                         setNewArea({ 
-                                            city: e.target.value, 
-                                            cityId: p?.id || 0,
+                                            city: p?.name || "", 
+                                            cityId: id,
                                             district: "", 
                                             districtId: 0,
                                             selectedMahalles: [] 
@@ -170,7 +171,7 @@ export default function ServiceAreaManager({ serviceAreas, onChange }: Props) {
                                     disabled={loading.provinces}
                                 >
                                     <option value="">Şehir Seçin</option>
-                                    {provinces.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+                                    {provinces.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                                 </select>
                                 {loading.provinces && <Loader2 className="absolute right-4 top-3 h-5 w-5 animate-spin text-zinc-400" />}
                             </div>
@@ -182,20 +183,21 @@ export default function ServiceAreaManager({ serviceAreas, onChange }: Props) {
                             <div className="relative">
                                 <select 
                                     className="w-full h-11 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 text-sm font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-50"
-                                    value={newArea.district}
+                                    value={newArea.districtId || ""}
                                     onChange={(e) => {
-                                        const d = districts.find(x => x.name === e.target.value);
+                                        const id = parseInt(e.target.value);
+                                        const d = districts.find(x => x.id === id);
                                         setNewArea(prev => ({ 
                                             ...prev, 
-                                            district: e.target.value, 
-                                            districtId: d?.id || 0,
+                                            district: d?.name || "", 
+                                            districtId: id,
                                             selectedMahalles: [] 
                                         }));
                                     }}
                                     disabled={!newArea.cityId || loading.districts}
                                 >
                                     <option value="">İlçe Seçin</option>
-                                    {districts.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
+                                    {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                                 </select>
                                 {loading.districts && <Loader2 className="absolute right-4 top-3 h-5 w-5 animate-spin text-zinc-400" />}
                             </div>
