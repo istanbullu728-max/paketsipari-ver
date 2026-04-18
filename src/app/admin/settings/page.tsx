@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Save, Upload, X, Image as ImageIcon, MessageCircle, Clock, Power, Globe, Plus } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { RestaurantLogo } from "@/components/restaurant-logo";
+import ServiceAreaManager from "@/components/admin/service-area-manager";
 import { Switch } from "@/components/ui/switch";
 
 const DAYS_MAP: Record<string, string> = {
@@ -349,85 +350,11 @@ export default function AdminSettingsPage() {
                         Hizmet verdiğiniz şehir, ilçe ve mahalleleri belirleyerek kapsam dışı siparişleri engelleyin.
                     </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                    <div className="space-y-4">
-                        {formData.serviceAreas.map((area, index) => (
-                            <div key={area.id} className="p-4 rounded-xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/30 relative group">
-                                <button 
-                                    onClick={() => {
-                                        setFormData(prev => ({
-                                            ...prev,
-                                            serviceAreas: prev.serviceAreas.filter(a => a.id !== area.id)
-                                        }));
-                                    }}
-                                    className="absolute top-3 right-3 p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-                                >
-                                    <X className="w-4 h-4" />
-                                </button>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label className="text-xs font-bold text-zinc-500 uppercase">Şehir</Label>
-                                        <Input 
-                                            value={area.city} 
-                                            onChange={(e) => {
-                                                const newAreas = [...formData.serviceAreas];
-                                                newAreas[index].city = e.target.value;
-                                                setFormData(prev => ({ ...prev, serviceAreas: newAreas }));
-                                            }}
-                                            placeholder="Örn: İstanbul"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-xs font-bold text-zinc-500 uppercase">İlçe</Label>
-                                        <Input 
-                                            value={area.district} 
-                                            onChange={(e) => {
-                                                const newAreas = [...formData.serviceAreas];
-                                                newAreas[index].district = e.target.value;
-                                                setFormData(prev => ({ ...prev, serviceAreas: newAreas }));
-                                            }}
-                                            placeholder="Örn: Beşiktaş"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="mt-4 space-y-2">
-                                    <Label className="text-xs font-bold text-zinc-500 uppercase">Mahalleler (Virgülle ayırın, tüm ilçe için boş bırakın)</Label>
-                                    <Textarea 
-                                        value={area.neighborhoods.join(", ")} 
-                                        onChange={(e) => {
-                                            const newAreas = [...formData.serviceAreas];
-                                            newAreas[index].neighborhoods = e.target.value.split(",").map(s => s.trim()).filter(s => s !== "");
-                                            setFormData(prev => ({ ...prev, serviceAreas: newAreas }));
-                                        }}
-                                        placeholder="Örn: Bebek Mahrisi, Etiler, Arnavutköy..."
-                                        className="resize-none h-20 bg-white dark:bg-zinc-950"
-                                    />
-                                </div>
-                            </div>
-                        ))}
-
-                        {formData.serviceAreas.length === 0 && (
-                            <div className="text-center py-8 border-2 border-dashed border-zinc-100 dark:border-zinc-800 rounded-2xl">
-                                <p className="text-sm text-zinc-500 mb-4">Henüz hizmet bölgesi eklenmedi. Tüm bölgelere hizmet verilmektedir.</p>
-                            </div>
-                        )}
-
-                        <Button 
-                            variant="outline" 
-                            className="w-full border-dashed border-2 h-12 text-zinc-500 hover:text-emerald-500 hover:border-emerald-500/50 hover:bg-emerald-50/30 font-bold transition-all"
-                            onClick={() => {
-                                const newArea: ServiceArea = {
-                                    id: Math.random().toString(36).substr(2, 9),
-                                    city: "",
-                                    district: "",
-                                    neighborhoods: []
-                                };
-                                setFormData(prev => ({ ...prev, serviceAreas: [...prev.serviceAreas, newArea] }));
-                            }}
-                        >
-                            <Plus className="w-4 h-4 mr-2" /> Yeni Bölge Ekle
-                        </Button>
-                    </div>
+                <CardContent className="p-4 md:p-6 pb-8">
+                    <ServiceAreaManager 
+                        serviceAreas={formData.serviceAreas}
+                        onChange={(newAreas) => setFormData(prev => ({ ...prev, serviceAreas: newAreas }))}
+                    />
                 </CardContent>
             </Card>
 
