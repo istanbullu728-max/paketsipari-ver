@@ -66,17 +66,25 @@ export default function AdminMenuPage() {
     // Auto-search effect when product name changes
     useEffect(() => {
         // Only trigger if we have a name, dialog is open, and it's long enough
-        if (!isProductDialogOpen || !productForm.name || productForm.name.trim().length <= 2) return;
+        if (!isProductDialogOpen || !productForm.name || productForm.name.trim().length <= 3) return;
 
         const delayDebounceFn = setTimeout(() => {
+            const category = draftData.categories.find(c => c.id === selectedCategoryId);
+            const contextQuery = category ? `${productForm.name} ${category.name}` : productForm.name;
+            
             setSearchQuery(productForm.name);
-            setImageMode("search");
-            performImageSearch(productForm.name);
-        }, 700); // 700ms debounce
+            
+            // Auto switch to search mode if no image is selected yet
+            if (!productForm.imageUrl) {
+                setImageMode("search");
+            }
+            
+            performImageSearch(contextQuery);
+        }, 1000); // 1s debounce to be more deliberate
 
         return () => clearTimeout(delayDebounceFn);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [productForm.name, isProductDialogOpen]);
+    }, [productForm.name, isProductDialogOpen, selectedCategoryId]);
 
     const readFileAsDataUrl = (file: File): Promise<string> =>
         new Promise((resolve, reject) => {
@@ -264,6 +272,13 @@ export default function AdminMenuPage() {
         });
         setSearchQuery(product.name);
         setIsProductDialogOpen(true);
+        
+        // Auto-trigger search when opening a product
+        if (product.name) {
+            const category = draftData.categories.find(c => c.id === product.categoryId);
+            const contextQuery = category ? `${product.name} ${category.name}` : product.name;
+            performImageSearch(contextQuery);
+        }
     };
 
     const handleAddVariationGroup = () => {
@@ -387,7 +402,9 @@ export default function AdminMenuPage() {
     };
 
     const handleSearchClick = () => {
-        performImageSearch(searchQuery);
+        const category = draftData.categories.find(c => c.id === selectedCategoryId);
+        const contextQuery = category && searchQuery.length < 15 ? `${searchQuery} ${category.name}` : searchQuery;
+        performImageSearch(contextQuery);
     };
 
     const copyToClipboard = (text: string) => {
@@ -1106,21 +1123,27 @@ export default function AdminMenuPage() {
 
                                     {searchResults.length > 0 && (
                                         <div className="grid grid-cols-3 gap-2 mt-3 p-1 max-h-48 overflow-y-auto">
-                                            {searchResults.map((imgUrl, i) => (
-                                                <div
-                                                    key={i}
-                                                    onClick={() => setProductForm(prev => ({ ...prev, imageUrl: imgUrl }))}
-                                                    className={`aspect-square cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${productForm.imageUrl === imgUrl ? "border-emerald-500 shadow-md scale-95" : "border-transparent hover:border-zinc-300 dark:hover:border-zinc-700"}`}
-                                                >
-                                                    <img
-                                                        src={`/api/image-proxy?url=${encodeURIComponent(imgUrl)}`}
-                                                        alt="Sonuç"
-                                                        className="w-full h-full object-cover"
-                                                        loading="lazy"
-                                                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                                                    />
-                                                </div>
-                                            ))}
+                                            {isSearching ? (
+                                                Array.from({ length: 6 }).map((_, i) => (
+                                                    <div key={i} className="aspect-square rounded-lg bg-zinc-100 dark:bg-zinc-800 animate-pulse" />
+                                                ))
+                                            ) : (
+                                                searchResults.map((imgUrl, i) => (
+                                                    <div
+                                                        key={i}
+                                                        onClick={() => setProductForm(prev => ({ ...prev, imageUrl: imgUrl }))}
+                                                        className={`aspect-square cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${productForm.imageUrl === imgUrl ? "border-emerald-500 shadow-md scale-95" : "border-transparent hover:border-zinc-300 dark:hover:border-zinc-700"}`}
+                                                    >
+                                                        <img
+                                                            src={`/api/image-proxy?url=${encodeURIComponent(imgUrl)}`}
+                                                            alt="Sonuç"
+                                                            className="w-full h-full object-cover"
+                                                            loading="lazy"
+                                                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                                        />
+                                                    </div>
+                                                ))
+                                            )}
                                         </div>
                                     )}
 
