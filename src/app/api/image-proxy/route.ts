@@ -32,6 +32,9 @@ const ALLOWED_HOSTS = [
     "imgur.com",
     "media.istockphoto.com",
     "images.pexels.com",
+    "encrypted-tbn0.gstatic.com",
+    "lh3.googleusercontent.com",
+    "googleusercontent.com",
 ];
 
 export async function GET(request: NextRequest) {

@@ -1121,8 +1121,8 @@ export default function AdminMenuPage() {
                                         </Button>
                                     </div>
 
-                                    {searchResults.length > 0 && (
-                                        <div className="grid grid-cols-3 gap-2 mt-3 p-1 max-h-48 overflow-y-auto">
+                                    {(isSearching || searchResults.length > 0) && (
+                                        <div className="grid grid-cols-3 gap-2 mt-3 p-1 max-h-48 overflow-y-auto min-h-[120px]">
                                             {isSearching ? (
                                                 Array.from({ length: 6 }).map((_, i) => (
                                                     <div key={i} className="aspect-square rounded-lg bg-zinc-100 dark:bg-zinc-800 animate-pulse" />

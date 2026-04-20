@@ -68,8 +68,9 @@ async function searchGoogleImages(query: string): Promise<string[]> {
         const attrPattern = /(?:data-src|data-iurl)="([^"]+)"/g;
         let match;
         while ((match = attrPattern.exec(html)) !== null && urls.length < 20) {
-            if (match[1].startsWith("http") && !match[1].includes("google")) {
-                urls.push(match[1]);
+            const u = match[1];
+            if (u.startsWith("http") && !u.includes("google.com/search")) {
+                if (!urls.includes(u)) urls.push(u);
             }
         }
 
