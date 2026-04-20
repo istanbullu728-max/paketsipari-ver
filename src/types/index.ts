@@ -32,11 +32,18 @@ export interface Restaurant {
   description?: string;
 }
 
+export interface SubCategory {
+  id: string;
+  name: string;
+  orderIndex: number;
+}
+
 export interface Category {
   id: string;
   restaurantId: string;
   name: string;
   orderIndex: number;
+  subCategories?: SubCategory[];
 }
 
 export interface ProductVariationOption {
@@ -60,6 +67,7 @@ export interface Product {
   id: string;
   restaurantId: string;
   categoryId: string;
+  subCategoryId?: string;
   name: string;
   description?: string;
   price: number;

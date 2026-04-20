@@ -2,8 +2,9 @@
 // UI Update: Added Update button and cleaned up tabs
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import Image from "next/image";
 import { useRestaurant } from "@/components/restaurant-provider";
-import { Category, Product } from "@/types";
+import { Category, SubCategory, Product } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ import { ProductVariation, ProductVariationOption } from "@/types";
 export default function AdminMenuPage() {
     const { draftData, updateDraftData, publishDraft } = useRestaurant();
     const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+    const [isSubCategoryDialogOpen, setIsSubCategoryDialogOpen] = useState(false);
     const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
     const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false);
     const [isPublishing, setIsPublishing] = useState(false);
@@ -29,6 +31,11 @@ export default function AdminMenuPage() {
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
     const [categoryName, setCategoryName] = useState("");
 
+    // Sub-category State
+    const [editingSubCategory, setEditingSubCategory] = useState<SubCategory | null>(null);
+    const [subCategoryName, setSubCategoryName] = useState("");
+    const [parentCategoryIdForSub, setParentCategoryIdForSub] = useState<string>("");
+
     // Product State
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [selectedCategoryId, setSelectedCategoryId] = useState<string>(draftData.categories[0]?.id || "");
@@ -38,12 +45,14 @@ export default function AdminMenuPage() {
         price: string;
         imageUrl: string;
         variations: ProductVariation[];
+        subCategoryId: string;
     }>({
         name: "",
         description: "",
         price: "",
         imageUrl: "",
         variations: [],
+        subCategoryId: "",
     });
 
     // Image upload state
@@ -122,6 +131,55 @@ export default function AdminMenuPage() {
         setEditingCategory(null);
     };
 
+    const handleSaveSubCategory = () => {
+        if (!subCategoryName.trim() || !parentCategoryIdForSub) return;
+
+        let newCategories = [...draftData.categories];
+        newCategories = newCategories.map(cat => {
+            if (cat.id !== parentCategoryIdForSub) return cat;
+
+            const currentSubs = cat.subCategories || [];
+            let newSubs = [...currentSubs];
+
+            if (editingSubCategory) {
+                newSubs = newSubs.map(s => s.id === editingSubCategory.id ? { ...s, name: subCategoryName } : s);
+            } else {
+                newSubs.push({
+                    id: `sub-${Date.now()}`,
+                    name: subCategoryName,
+                    orderIndex: newSubs.length
+                });
+            }
+
+            return { ...cat, subCategories: newSubs };
+        });
+
+        updateDraftData({ categories: newCategories });
+        setIsSubCategoryDialogOpen(false);
+        setSubCategoryName("");
+        setEditingSubCategory(null);
+    };
+
+    const handleDeleteSubCategory = (catId: string, subId: string) => {
+        if (confirm("Bu alt kategoriyi silmek istediğinize emin misiniz?")) {
+            let newCategories = [...draftData.categories];
+            newCategories = newCategories.map(cat => {
+                if (cat.id !== catId) return cat;
+                return {
+                    ...cat,
+                    subCategories: (cat.subCategories || []).filter(s => s.id !== subId)
+                };
+            });
+
+            // Also unassign products from this sub-category
+            const newProducts = draftData.products.map(p => 
+                p.subCategoryId === subId ? { ...p, subCategoryId: undefined } : p
+            );
+
+            updateDraftData({ categories: newCategories, products: newProducts });
+        }
+    };
+
     const handleDeleteCategory = (id: string) => {
         if (confirm("Bu kategoriyi silmek istediğinize emin misiniz? İçindeki ürünler de silinebilir.")) {
             updateDraftData({
@@ -143,6 +201,7 @@ export default function AdminMenuPage() {
                 p.id === editingProduct.id ? {
                     ...p,
                     categoryId: selectedCategoryId,
+                    subCategoryId: productForm.subCategoryId || undefined,
                     name: productForm.name,
                     description: productForm.description,
                     price: parseFloat(productForm.price),
@@ -155,6 +214,7 @@ export default function AdminMenuPage() {
                 id: `prod-${Date.now()}`,
                 restaurantId: "1",
                 categoryId: selectedCategoryId,
+                subCategoryId: productForm.subCategoryId || undefined,
                 name: productForm.name,
                 description: productForm.description,
                 price: parseFloat(productForm.price),
@@ -167,7 +227,7 @@ export default function AdminMenuPage() {
         updateDraftData({ products: newProducts });
         setIsProductDialogOpen(false);
         setEditingProduct(null);
-        setProductForm({ name: "", description: "", price: "", imageUrl: "", variations: [] });
+        setProductForm({ name: "", description: "", price: "", imageUrl: "", variations: [], subCategoryId: "" });
         
         // Ensure the category is expanded after adding a product
         if (!expandedCategoryIds.includes(selectedCategoryId)) {
@@ -199,7 +259,8 @@ export default function AdminMenuPage() {
             description: product.description || "",
             price: product.price.toString(),
             imageUrl: product.imageUrl || "",
-            variations: product.variations || []
+            variations: product.variations || [],
+            subCategoryId: product.subCategoryId || ""
         });
         setSearchQuery(product.name);
         setIsProductDialogOpen(true);
@@ -355,6 +416,19 @@ export default function AdminMenuPage() {
         updateDraftData({ categories: categoriesWithNewOrder });
     };
 
+    const handleReorderSubCategories = (categoryId: string, newSubCategories: SubCategory[]) => {
+        const subCategoriesWithNewOrder = newSubCategories.map((sub, index) => ({
+            ...sub,
+            orderIndex: index
+        }));
+
+        let newCategories = [...draftData.categories];
+        newCategories = newCategories.map(cat => 
+            cat.id === categoryId ? { ...cat, subCategories: subCategoriesWithNewOrder } : cat
+        );
+        updateDraftData({ categories: newCategories });
+    };
+
     const siteUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/${draftData.slug}`;
 
     return (
@@ -469,9 +543,23 @@ export default function AdminMenuPage() {
                                                         size="sm" 
                                                         className="h-7 px-2 text-[10px] font-bold text-indigo-600 hover:text-indigo-700 decoration-indigo-600/30"
                                                         onClick={() => {
+                                                            setParentCategoryIdForSub(category.id);
+                                                            setEditingSubCategory(null);
+                                                            setSubCategoryName("");
+                                                            setIsSubCategoryDialogOpen(true);
+                                                        }}
+                                                    >
+                                                        <Plus className="w-3 h-3 mr-1" /> Alt Kategori
+                                                    </Button>
+
+                                                    <Button 
+                                                        variant="link" 
+                                                        size="sm" 
+                                                        className="h-7 px-2 text-[10px] font-bold text-zinc-600 hover:text-indigo-600 decoration-zinc-600/30"
+                                                        onClick={() => {
                                                             setSelectedCategoryId(category.id);
                                                             setEditingProduct(null);
-                                                            setProductForm({ name: "", description: "", price: "", imageUrl: "", variations: [] });
+                                                            setProductForm({ name: "", description: "", price: "", imageUrl: "", variations: [], subCategoryId: "" });
                                                             setIsProductDialogOpen(true);
                                                         }}
                                                     >
@@ -514,70 +602,127 @@ export default function AdminMenuPage() {
                                                 exit={{ height: 0, opacity: 0 }}
                                                 transition={{ duration: 0.2 }}
                                             >
-                                                <div className="p-3 space-y-2 bg-white dark:bg-zinc-950">
-                                                    <div className="grid grid-cols-1 gap-2">
-                                                        {categoryProducts.map((product) => (
-                                                            <div 
-                                                                key={product.id}
-                                                                className="group flex items-center justify-between p-2.5 rounded-lg bg-zinc-50/50 dark:bg-zinc-900/30 border border-zinc-100/50 dark:border-zinc-800/40 hover:border-indigo-600/10 hover:bg-indigo-50/5 dark:hover:bg-indigo-900/5 transition-all"
-                                                            >
-                                                                <div className="flex items-center gap-4 flex-1 min-w-0">
-                                                                    <div className="w-14 h-14 rounded-lg bg-zinc-100 dark:bg-zinc-900 overflow-hidden flex-shrink-0 border border-zinc-100 dark:border-zinc-800 shadow-sm font-bold flex items-center justify-center">
-                                                                        {product.imageUrl ? (
-                                                                            <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
-                                                                        ) : (
-                                                                            <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-900/50">
-                                                                                <ImageIcon className="w-4 h-4 text-zinc-300 mb-0.5" />
-                                                                                <span className="text-[7px] text-zinc-300 uppercase font-black">Görsel</span>
+                                                <div className="p-3 space-y-4 bg-white dark:bg-zinc-950">
+                                                    {/* Sub-categories */}
+                                                    {category.subCategories && category.subCategories.length > 0 && (
+                                                        <Reorder.Group 
+                                                            axis="y" 
+                                                            values={category.subCategories} 
+                                                            onReorder={(newSubs) => handleReorderSubCategories(category.id, newSubs)}
+                                                            className="space-y-3"
+                                                        >
+                                                            {category.subCategories.map((sub) => {
+                                                                const subProducts = categoryProducts.filter(p => p.subCategoryId === sub.id);
+                                                                return (
+                                                                    <Reorder.Item 
+                                                                        key={sub.id} 
+                                                                        value={sub}
+                                                                        dragListener={isSorting}
+                                                                        className="list-none"
+                                                                    >
+                                                                        <div className="rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/10 p-3 relative group/sub">
+                                                                            {/* Sub-category Header */}
+                                                                            <div className="flex items-center justify-between mb-2">
+                                                                                <div className="flex items-center gap-2">
+                                                                                    {isSorting && (
+                                                                                        <GripVertical className="w-3 h-3 text-zinc-300 cursor-grab active:cursor-grabbing" />
+                                                                                    )}
+                                                                                    <h4 className="text-[12px] font-black uppercase tracking-widest text-zinc-400">{sub.name}</h4>
+                                                                                    <span className="text-[9px] bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded font-bold text-zinc-400">{subProducts.length}</span>
+                                                                                </div>
+                                                                                
+                                                                                {!isSorting && (
+                                                                                    <div className="flex items-center gap-1 opacity-0 group-hover/sub:opacity-100 transition-opacity">
+                                                                                        <Button 
+                                                                                            variant="ghost" 
+                                                                                            size="icon" 
+                                                                                            className="h-6 w-6 text-zinc-400 hover:text-indigo-600 rounded-md"
+                                                                                            onClick={() => {
+                                                                                                setSelectedCategoryId(category.id);
+                                                                                                setEditingProduct(null);
+                                                                                                setProductForm({ name: "", description: "", price: "", imageUrl: "", variations: [], subCategoryId: sub.id });
+                                                                                                setIsProductDialogOpen(true);
+                                                                                            }}
+                                                                                        >
+                                                                                            <Plus className="w-3 h-3" />
+                                                                                        </Button>
+                                                                                        <Button 
+                                                                                            variant="ghost" 
+                                                                                            size="icon" 
+                                                                                            className="h-6 w-6 text-zinc-400 hover:text-indigo-600 rounded-md"
+                                                                                            onClick={() => {
+                                                                                                setParentCategoryIdForSub(category.id);
+                                                                                                setEditingSubCategory(sub);
+                                                                                                setSubCategoryName(sub.name);
+                                                                                                setIsSubCategoryDialogOpen(true);
+                                                                                            }}
+                                                                                        >
+                                                                                            <Edit className="w-3 h-3" />
+                                                                                        </Button>
+                                                                                        <Button 
+                                                                                            variant="ghost" 
+                                                                                            size="icon" 
+                                                                                            className="h-6 w-6 text-zinc-400 hover:text-red-500 rounded-md"
+                                                                                            onClick={() => handleDeleteSubCategory(category.id, sub.id)}
+                                                                                        >
+                                                                                            <Trash2 className="w-3 h-3" />
+                                                                                        </Button>
+                                                                                    </div>
+                                                                                )}
                                                                             </div>
-                                                                        )}
-                                                                    </div>
-                                                                    <div className="min-w-0 space-y-0.5">
-                                                                        <h4 className="font-bold text-zinc-900 dark:text-zinc-100 truncate text-[14px] tracking-tight">{product.name}</h4>
-                                                                        <div className="flex items-center gap-2">
-                                                                            <p className="font-bold text-indigo-600 dark:text-indigo-400 text-[13px]">{product.price} ₺</p>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
 
-                                                                <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity pr-1">
-                                                                    <Button 
-                                                                        variant="ghost" 
-                                                                        size="icon" 
-                                                                        className="h-8 w-8 text-zinc-400 hover:text-indigo-600 hover:bg-white dark:hover:bg-zinc-800 rounded-lg shadow-sm border border-transparent hover:border-zinc-100 dark:hover:border-zinc-700"
-                                                                        onClick={() => openEditProduct(product)}
-                                                                    >
-                                                                        <Edit className="w-3.5 h-3.5" />
-                                                                    </Button>
-                                                                    <Button 
-                                                                        variant="ghost" 
-                                                                        size="icon" 
-                                                                        className="h-8 w-8 text-zinc-400 hover:text-red-600 hover:bg-white dark:hover:bg-zinc-800 rounded-lg shadow-sm border border-transparent hover:border-zinc-100 dark:hover:border-zinc-700"
-                                                                        onClick={() => handleDeleteProduct(product.id)}
-                                                                    >
-                                                                        <Trash2 className="w-3.5 h-3.5" />
-                                                                    </Button>
-                                                                </div>
+                                                                            {/* Sub-category Products */}
+                                                                            <div className="space-y-1.5">
+                                                                                {subProducts.map(product => (
+                                                                                    <ProductRow key={product.id} product={product} />
+                                                                                ))}
+                                                                                {subProducts.length === 0 && (
+                                                                                    <div className="py-4 text-center border border-dashed border-zinc-200/50 dark:border-zinc-800/50 rounded-xl bg-white/50 dark:bg-zinc-900/50">
+                                                                                        <span className="text-[11px] text-zinc-400 font-medium">Bu alt kategoride ürün yok.</span>
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                    </Reorder.Item>
+                                                                );
+                                                            })}
+                                                        </Reorder.Group>
+                                                    )}
+
+                                                    {/* Top-tier Products (No sub-category or all if no sub-categories defined) */}
+                                                    <div className="space-y-1.5">
+                                                        {(category.subCategories && category.subCategories.length > 0) && (
+                                                            <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between mb-2">
+                                                                <h4 className="text-[12px] font-black uppercase tracking-widest text-zinc-400">Genel Ürünler</h4>
+                                                                <span className="text-[9px] bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded font-bold text-zinc-400">
+                                                                    {categoryProducts.filter(p => !p.subCategoryId).length}
+                                                                </span>
                                                             </div>
+                                                        )}
+                                                        {categoryProducts.filter(p => !p.subCategoryId).map((product) => (
+                                                            <ProductRow key={product.id} product={product} />
                                                         ))}
                                                     </div>
-                                                    {categoryProducts.length === 0 && (
+
+                                                    {categoryProducts.length === 0 && (!category.subCategories || category.subCategories.length === 0) && (
                                                         <div className="py-12 text-center">
                                                             <div className="w-12 h-12 rounded-full bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center mx-auto mb-3">
                                                                 <Plus className="w-6 h-6 text-zinc-300" />
                                                             </div>
                                                             <p className="text-sm text-zinc-500 font-medium">Bu kategoride henüz ürün bulunmuyor.</p>
-                                                            <Button 
-                                                                variant="link" 
-                                                                className="mt-2 text-indigo-600 font-bold"
-                                                                onClick={() => {
-                                                                    setSelectedCategoryId(category.id);
-                                                                    setEditingProduct(null);
-                                                                    setIsProductDialogOpen(true);
-                                                                }}
-                                                            >
-                                                                İlk ürünü ekle →
-                                                            </Button>
+                                                            <div className="flex justify-center gap-4 mt-2">
+                                                                <Button 
+                                                                    variant="link" 
+                                                                    className="text-indigo-600 font-bold"
+                                                                    onClick={() => {
+                                                                        setSelectedCategoryId(category.id);
+                                                                        setEditingProduct(null);
+                                                                        setIsProductDialogOpen(true);
+                                                                    }}
+                                                                >
+                                                                    Ürün Ekle →
+                                                                </Button>
+                                                            </div>
                                                         </div>
                                                     )}
                                                 </div>
@@ -607,6 +752,32 @@ export default function AdminMenuPage() {
                     </div>
                 )}
             </div>
+
+            {/* Sub-category Dialog */}
+            <Dialog open={isSubCategoryDialogOpen} onOpenChange={setIsSubCategoryDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{editingSubCategory ? "Alt Kategoriyi Düzenle" : "Yeni Alt Kategori Ekle"}</DialogTitle>
+                        <DialogDescription>Bu alt kategori seçtiğiniz ana kategorinin içinde görünecektir.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="subCatName">Alt Kategori Adı</Label>
+                            <Input
+                                id="subCatName"
+                                placeholder="Örn: Sıcak İçecekler, Dürümler..."
+                                value={subCategoryName}
+                                onChange={(e) => setSubCategoryName(e.target.value)}
+                                autoFocus
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsSubCategoryDialogOpen(false)}>İptal</Button>
+                        <Button onClick={handleSaveSubCategory} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold">Kaydet</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {/* Category Dialog */}
             <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
@@ -684,6 +855,24 @@ export default function AdminMenuPage() {
                                 </select>
                             </div>
                         </div>
+
+                        {/* Sub-category Selection (Only if parent has them) */}
+                        {draftData.categories.find(c => c.id === selectedCategoryId)?.subCategories?.length ? (
+                            <div className="space-y-2">
+                                <Label htmlFor="prodSubCategory">Alt Kategori (Opsiyonel)</Label>
+                                <select
+                                    id="prodSubCategory"
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                                    value={productForm.subCategoryId}
+                                    onChange={(e) => setProductForm({ ...productForm, subCategoryId: e.target.value })}
+                                >
+                                    <option value="">Genel (Alt kategori yok)</option>
+                                    {draftData.categories.find(c => c.id === selectedCategoryId)?.subCategories?.map(sc => (
+                                        <option key={sc.id} value={sc.id}>{sc.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        ) : null}
 
                         {/* --- SIMPLIFIED VARIATION MANAGEMENT --- */}
                         <div className="space-y-4 pt-6 border-t border-zinc-100 dark:border-zinc-800">
@@ -1019,4 +1208,60 @@ export default function AdminMenuPage() {
 
         </div>
     );
+
+    // ── Helper Component for Product Row ──────────────────────────────────
+    function ProductRow({ product }: { product: Product }) {
+        return (
+            <div 
+                className="group flex items-center justify-between p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 hover:border-indigo-600/20 hover:shadow-md transition-all"
+            >
+                <div className="flex items-center gap-4 flex-1 min-w-0">
+                    <div className="w-14 h-14 rounded-lg bg-zinc-100 dark:bg-zinc-800 overflow-hidden flex-shrink-0 border border-zinc-100 dark:border-zinc-800 shadow-sm font-bold flex items-center justify-center">
+                        {product.imageUrl ? (
+                            <Image src={product.imageUrl} alt={product.name} width={56} height={56} className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-900/50">
+                                <UtensilsCrossed className="w-4 h-4 text-zinc-300 mb-0.5" />
+                                <span className="text-[7px] text-zinc-300 uppercase font-black">Görsel</span>
+                            </div>
+                        )}
+                    </div>
+                    <div className="min-w-0 space-y-0.5">
+                        <h4 className="font-bold text-zinc-900 dark:text-zinc-100 truncate text-[14px] tracking-tight">{product.name}</h4>
+                        <div className="flex items-center gap-2">
+                            <p className="font-bold text-indigo-600 dark:text-indigo-400 text-[13px]">{product.price} ₺</p>
+                            {product.variations && product.variations.length > 0 && (
+                                <Badge variant="secondary" className="text-[9px] px-1.5 h-4 font-bold uppercase tracking-tighter bg-emerald-50 text-emerald-600 border-none">Varyasyonlu</Badge>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity pr-1">
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-zinc-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-zinc-800 rounded-lg shadow-sm border border-transparent hover:border-zinc-100 dark:hover:border-zinc-700"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            openEditProduct(product);
+                        }}
+                    >
+                        <Edit className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-zinc-800 rounded-lg shadow-sm border border-transparent hover:border-zinc-100 dark:hover:border-zinc-700"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteProduct(product.id);
+                        }}
+                    >
+                        <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                </div>
+            </div>
+        );
+    }
 }

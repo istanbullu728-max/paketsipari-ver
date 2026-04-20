@@ -70,6 +70,9 @@ export default function StorefrontClient({
         }
     };
 
+    const activeCategory = categories.find((c) => c.id === selectedCategory);
+    const hasSubCategories = activeCategory?.subCategories && activeCategory.subCategories.length > 0;
+
     const filteredProducts = products
         .filter((p) => p.categoryId === selectedCategory)
         .filter((p) =>
@@ -78,7 +81,7 @@ export default function StorefrontClient({
             (p.description?.toLowerCase() ?? "").includes(searchQuery.toLowerCase())
         );
 
-    const selectedCategoryName = categories.find((c) => c.id === selectedCategory)?.name;
+    const selectedCategoryName = activeCategory?.name;
 
     return (
         <div className="min-h-screen bg-gray-50/80 pb-28 sm:pb-20 relative">
@@ -165,16 +168,70 @@ export default function StorefrontClient({
                     </div>
                 </div>
 
-                {/* Product Grid */}
+                {/* Product Grid / Sub-category Groups */}
                 {filteredProducts.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
-                        {filteredProducts.map((p) => (
-                            <ProductCard
-                                key={p.id}
-                                product={p}
-                                onSelect={() => selectProductToOrder(p)}
-                            />
-                        ))}
+                    <div className="space-y-10">
+                        {hasSubCategories ? (
+                            <>
+                                {activeCategory.subCategories?.map((sub) => {
+                                    const subProducts = filteredProducts.filter(p => p.subCategoryId === sub.id);
+                                    if (subProducts.length === 0) return null;
+                                    
+                                    return (
+                                        <div key={sub.id} className="space-y-5">
+                                            <div className="flex items-center gap-4">
+                                                <div className="h-px flex-1 bg-gray-200"></div>
+                                                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-gray-400">
+                                                    {sub.name}
+                                                </h3>
+                                                <div className="h-px flex-1 bg-gray-200"></div>
+                                            </div>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
+                                                {subProducts.map((p) => (
+                                                    <ProductCard
+                                                        key={p.id}
+                                                        product={p}
+                                                        onSelect={() => selectProductToOrder(p)}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                                
+                                {/* Products with no sub-category in a category that HAS sub-categories */}
+                                {filteredProducts.filter(p => !p.subCategoryId).length > 0 && (
+                                    <div className="space-y-5">
+                                        <div className="flex items-center gap-4">
+                                            <div className="h-px flex-1 bg-gray-200"></div>
+                                            <h3 className="text-sm font-black uppercase tracking-[0.2em] text-gray-400">
+                                                DİĞER ÜRÜNLER
+                                            </h3>
+                                            <div className="h-px flex-1 bg-gray-200"></div>
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
+                                            {filteredProducts.filter(p => !p.subCategoryId).map((p) => (
+                                                <ProductCard
+                                                    key={p.id}
+                                                    product={p}
+                                                    onSelect={() => selectProductToOrder(p)}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
+                                {filteredProducts.map((p) => (
+                                    <ProductCard
+                                        key={p.id}
+                                        product={p}
+                                        onSelect={() => selectProductToOrder(p)}
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <div className="flex flex-col items-center justify-center py-20 text-center">
