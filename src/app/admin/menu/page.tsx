@@ -70,7 +70,12 @@ export default function AdminMenuPage() {
 
         const delayDebounceFn = setTimeout(() => {
             const category = draftData.categories.find(c => c.id === selectedCategoryId);
-            const contextQuery = category ? `${productForm.name} ${category.name}` : productForm.name;
+            
+            // Smart query construction
+            let q = productForm.name.trim();
+            if (q.length < 15 && category) {
+                q = `${q} ${category.name}`;
+            }
             
             setSearchQuery(productForm.name);
             
@@ -79,7 +84,7 @@ export default function AdminMenuPage() {
                 setImageMode("search");
             }
             
-            performImageSearch(contextQuery);
+            performImageSearch(q);
         }, 1000); // 1s debounce to be more deliberate
 
         return () => clearTimeout(delayDebounceFn);
@@ -403,8 +408,14 @@ export default function AdminMenuPage() {
 
     const handleSearchClick = () => {
         const category = draftData.categories.find(c => c.id === selectedCategoryId);
-        const contextQuery = category && searchQuery.length < 15 ? `${searchQuery} ${category.name}` : searchQuery;
-        performImageSearch(contextQuery);
+        let q = searchQuery.trim();
+        
+        // If query is too simple, add "yemek" context for better results
+        if (q.length < 10) {
+            q = `${q} yemek`;
+        }
+        
+        performImageSearch(q);
     };
 
     const copyToClipboard = (text: string) => {
