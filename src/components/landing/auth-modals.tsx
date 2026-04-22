@@ -56,6 +56,15 @@ export function AuthModals() {
         }
     };
 
+    const handleDemoLogin = () => {
+        setIsLoading(true);
+        // Simulate a quick demo entry
+        setTimeout(() => {
+            setIsLoading(false);
+            router.push("/admin");
+        }, 800);
+    };
+
     return (
         <>
             <Dialog onOpenChange={(open) => !open && setErrors({})}>
@@ -135,6 +144,16 @@ export function AuthModals() {
                                 />
                             </div>
                             {errors.password && <p className="text-xs text-red-500 font-medium">{errors.password}</p>}
+                            
+                            {mode === "login" && (
+                                <button
+                                    type="button"
+                                    onClick={handleDemoLogin}
+                                    className="w-full mt-2 py-2 px-4 rounded-lg border border-dashed border-primary/40 text-primary text-sm font-semibold hover:bg-primary/5 transition-all flex items-center justify-center gap-2"
+                                >
+                                    Demo Girişi (Şifresiz)
+                                </button>
+                            )}
                         </div>
 
                         {mode === "register" && (
